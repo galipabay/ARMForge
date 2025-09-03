@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,54 +9,24 @@ namespace ARMForge.Kernel.Entities
 {
     public class Product : BaseEntity
     {
-		private String name;
+        [Required, MaxLength(128)]
+        public string Name { get; set; } = string.Empty;
 
-		public String Name
-		{
-			get { return name; }
-			set { name = value; }
-		}
-		private String stockKeepingUnit;
+        [MaxLength(64)]
+        public string? StockKeepingUnit { get; set; }
 
-		public String StockKeepingUnit
-        {
-			get { return stockKeepingUnit; }
-			set { stockKeepingUnit = value; }
-		}
-		private String description;
+        [MaxLength(1000)]
+        public string? Description { get; set; }
 
-		public String Description
-        {
-			get { return description; }
-			set { description = value; }
-		}
-		private int unitPrice;
+        [Range(0, double.MaxValue)]
+        public decimal UnitPrice { get; set; }
 
-		public int UnitPrice
-        {
-			get { return unitPrice; }
-			set { unitPrice = value; }
-		}
-		private int stockQuantity;
+        [Range(0, int.MaxValue)]
+        public int StockQuantity { get; set; }
+        [MaxLength(64)]
+        public string? Category { get; set; }
 
-		public int StockQuantity
-        {
-			get { return stockQuantity; }
-			set { stockQuantity = value; }
-		}
-		private String category;
-
-		public String Category
-        {
-			get { return category; }
-			set { category = value; }
-		}
-		private bool isActive;
-
-		public bool IsActive
-        {
-			get { return isActive; }
-			set { isActive = value; }
-		}
-	}
+        // OrderItem ilişkisi
+        public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+    }
 }

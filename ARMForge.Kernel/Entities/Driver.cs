@@ -8,56 +8,27 @@ namespace ARMForge.Kernel.Entities
 {
     public class Driver : BaseEntity
     {
-		private String firstname;
+        public int UserId { get; set; }
 
-		public String Firstname
-		{
-			get { return firstname; }
-			set { firstname = value; }
-		}
+        public User User { get; set; } = null!;
 
-		private int employeeId;
-
-		public int EmployeeId
+        public enum DriverLicenseType
         {
-			get { return employeeId; }
-			set { employeeId = value; }
-		}
-		private int licenseType;
+            A,
+            B,
+            C,
+            D,
+            E,
+            F
+        }
+        public DriverLicenseType LicenseType { get; set; }
+        
+        public bool IsOnDuty { get; set; }
+        
+        public DateTime? LastInspectionDate { get; set; }
+        
+        public bool IsAvailable { get; set; }
 
-		public int LicenseType
-        {
-			get { return licenseType; }
-			set { licenseType = value; }
-		}
-		private bool isOnDuty;
-
-		public bool IsOnDuty
-        {
-			get { return isOnDuty; }
-			set { isOnDuty = value; }
-		}
-		private DateTime? lastInspectionDate;
-
-		public DateTime? LastInspectionDate
-        {
-			get { return lastInspectionDate; }
-			set { lastInspectionDate = value; }
-		}
-		private bool isAvailable;
-
-		public bool IsAvailable
-		{
-			get { return isAvailable; }
-			set { isAvailable = value; }
-		}
-		private ICollection<Shipment>? shipments;
-
-		public ICollection<Shipment>? Shipments
-		{
-			get { return shipments; }
-			set { shipments = value; }
-		}
-
-	}
+        public ICollection<Shipment>? Shipments { get; set; }
+    }
 }

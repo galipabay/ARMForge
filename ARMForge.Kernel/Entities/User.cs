@@ -1,112 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace ARMForge.Kernel.Entities
 {
     public class User : BaseEntity 
     {
-        private String firstname;
+        [MaxLength(64)]
+        public string Firstname { get; set; }
+        
+        [MaxLength(64)]
+        public string Lastname { get; set; }
+        
+        [JsonIgnore]
+        public string PasswordHash { get; set; } = string.Empty;
 
-        public String Firstname
-        {
-            get { return firstname; }
-            set { firstname = value; }
-        }
+        [MaxLength(320)]
+        public string Email { get; set; } = string.Empty;
 
-        private String lastname;
+        [MaxLength(32)]
+        public string? PhoneNumber { get; set; }
 
-        public String Lastname
-        {
-            get { return lastname; }
-            set { lastname = value; }
-        }
+        public DateTimeOffset? LastLogin { get; set; }
 
-        private string passwordHash = string.Empty;
+        // HR alanları
+        public DateTimeOffset? HireDate { get; set; }
 
-		public string PasswordHash
-		{
-			get { return passwordHash; }
-			set { passwordHash = value; }
-		}
+        [MaxLength(64)]
+        public string? Department { get; set; }
 
-        private String email;
-        public String Email
-        {
-            get { return email; }
-            set { email = value; }
-        }
+        public int? ManagerId { get; set; }
 
-        private String phoneNumber;
-        public String PhoneNumber
-        {
-            get { return phoneNumber; }
-            set { phoneNumber = value; }
-        }
+        public ICollection<User> DirectReports { get; set; } = new List<User>();
 
-        private DateTime? lastLogin;
-        public DateTime? LastLogin
-        {
-            get { return lastLogin; }
-            set { lastLogin = value; }
-        }
+        public decimal Salary { get; set; }
 
-        private int roleId;
-        public int RoleId
-		{
-			get { return roleId; }
-			set { roleId = value; }
-		}
-
-		private Role role;
-		public Role Role
-		{
-			get { return role; }
-			set { role = value; }
-		}
-
-        private DateTime hireDate;
-
-        public DateTime HireDate
-        {
-            get { return hireDate; }
-            set { hireDate = value; }
-        }
-
-        private String department;
-
-        public String Department
-        {
-            get { return department; }
-            set { department = value; }
-        }
-
-        private int managerId;
-
-        public int ManagerId
-        {
-            get { return managerId; }
-            set { managerId = value; }
-        }
-
-        private int salary;
-
-        public int Salary
-        {
-            get { return salary; }
-            set { salary = value; }
-        }
-
-        private bool isActive;
-
-        public bool IsActive
-        {
-            get { return isActive; }
-            set { isActive = value; }
-        }
-
+        // 🔹 Many-to-many ilişki
+        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     }
 }

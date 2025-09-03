@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,42 +9,14 @@ namespace ARMForge.Kernel.Entities
 {
     public class Role : BaseEntity
     {
-        private int name;
+        [MaxLength(64)]
+        public string Name { get; set; }
+        
+        [MaxLength(500)]
+        public string Description { get; set; }
 
-        public int Name
-        {
-            get { return name; }
-            set { name = value; }
-        }
+        public bool IsSystemRole { get; set; }
 
-        private string description;
-
-        public string Description
-        {
-            get { return description; }
-            set { description = value; }
-        }
-
-        private bool isSystemRole;
-
-        public bool IsSystemRole
-        {
-            get { return isSystemRole; }
-            set { isSystemRole = value; }
-        }
-
-        private ICollection<User> users;
-
-        public ICollection<User> Users
-        {
-            get { return users; }
-            set { users = value; }
-        }
-
-        public Role()
-        {
-            isSystemRole = false;
-            users = [];
-        }
+        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     }
 }

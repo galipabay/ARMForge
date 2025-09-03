@@ -21,6 +21,7 @@ builder.Services.AddDbContext<ARMForgeDbContext>(options =>
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IShipmentService, ShipmentService>();
+builder.Services.AddScoped<IDriverService, DriverService>();
 
 var app = builder.Build();
 

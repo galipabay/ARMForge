@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,50 +9,21 @@ namespace ARMForge.Kernel.Entities
 {
     public class Supplier : BaseEntity
     {
-        private String companyName;
+        [Required, MaxLength(128)]
+        public string CompanyName { get; set; } = string.Empty;
 
-        public String CompanyName
-        {
-            get { return companyName; }
-            set { companyName = value; }
-        }
+        [Required, MaxLength(128)]
+        public string ContactPerson { get; set; } = string.Empty;
 
-        private String contactPerson;
+        [Required, MaxLength(320), EmailAddress]
+        public string Email { get; set; } = string.Empty;
 
-        public String ContactPerson
-        {
-            get { return contactPerson; }
-            set { contactPerson = value; }
-        }
+        [MaxLength(32)]
+        public string? PhoneNumber { get; set; }
 
-        private String email;
+        [Required, MaxLength(500)]
+        public string Address { get; set; } = string.Empty;
 
-        public String Email
-        {
-            get { return email; }
-            set { email = value; }
-        }
-
-        private String phoneNumber;
-
-        public String PhoneNumber
-        {
-            get { return phoneNumber; }
-            set { phoneNumber = value; }
-        }
-        private String address;
-
-        public String Address
-        {
-            get { return address; }
-            set { address = value; }
-        }
-        private String taxId;
-
-        public String TaxId
-        {
-            get { return taxId; }
-            set { taxId = value; }
-        }
+        public string? TaxId { get; set; }
     }
 }

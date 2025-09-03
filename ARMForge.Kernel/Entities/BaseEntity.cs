@@ -15,7 +15,6 @@ namespace ARMForge.Kernel.Entities
 			get { return id; }
 			set { id = value; }
 		}
-
 		private DateTime createdAt;
 
 		public DateTime CreatedAt
@@ -23,7 +22,6 @@ namespace ARMForge.Kernel.Entities
 			get { return createdAt; }
 			set { createdAt = value; }
 		}
-
         private DateTime? updatedAt;
 
         public DateTime? UpdatedAt
@@ -31,7 +29,6 @@ namespace ARMForge.Kernel.Entities
             get { return updatedAt; }
             set { updatedAt = value; }
         }
-
 		private bool isActive;
 
 		public bool IsActive
@@ -39,12 +36,10 @@ namespace ARMForge.Kernel.Entities
 			get { return isActive; }
 			set { isActive = value; }
 		}
-
         protected BaseEntity()
         {
             createdAt = DateTime.UtcNow;
             isActive = true;
         }
-
     }
 }
