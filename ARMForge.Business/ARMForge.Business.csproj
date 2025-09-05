@@ -7,7 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ARMForge.Infrastructure\ARMForge.Infrastructure.csproj" />
+    <ProjectReference Include="..\ARMForge.Types\ARMForge.Types.csproj" />
   </ItemGroup>
 
 </Project>

@@ -19,25 +19,8 @@ namespace ARMForge.Infrastructure
         public DbSet<Vehicle> Vehicles { get; set; }
         public DbSet<Driver> Drivers { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
-        //public DbSet<Warehouse> Warehouses { get; set; }
-        //public DbSet<Inventory> Inventories { get; set; }
-        //public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
-        //public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
-        //public DbSet<Payment> Payments { get; set; }
-        //public DbSet<Category> Categories { get; set; }
-        //public DbSet<Brand> Brands { get; set; }
-        //public DbSet<StockMovement> StockMovements { get; set; }
-        //public DbSet<MaintenanceRecord> MaintenanceRecords { get; set; }
-        //public DbSet<FuelLog> FuelLogs { get; set; }
-        //public DbSet<Route> Routes { get; set; }
-        //public DbSet<Delivery> Deliveries { get; set; }
-        //public DbSet<Return> Returns { get; set; }
-        //public DbSet<AuditLog> AuditLogs { get; set; }
-        //public DbSet<Notification> Notifications { get; set; }
-        //public DbSet<Setting> Settings { get; set; }
-        //public DbSet<Report> Reports { get; set; }
-        //public DbSet<DashboardWidget> DashboardWidgets { get; set; }
-
+        public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+        public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

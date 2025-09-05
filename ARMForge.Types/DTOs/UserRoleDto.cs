@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ARMForge.Kernel.Entities
+namespace ARMForge.Types.DTOs
 {
-    public class UserRole : BaseEntity
+    public class UserRoleDto
     {
         public int UserId { get; set; }
-        public User User { get; set; } = null!;
+        public UserDto User { get; set; }
 
         public int RoleId { get; set; }
-        public Role Role { get; set; } = null!;
+        public RoleDto Role { get; set; }
     }
 }

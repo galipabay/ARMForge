@@ -1,6 +1,7 @@
 ﻿using ARMForge.Kernel.Entities;
 using ARMForge.Kernel.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -35,6 +36,16 @@ namespace ARMForge.Infrastructure
         public async Task<int> SaveChangesAsync()
         {
             return await _context.SaveChangesAsync();
+        }
+
+        public Task<T> GetByConditionAsync(Expression<Func<T, bool>> expression, Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null)
+        {
+            IQueryable<T> query = _dbSet;
+            if (include != null)
+            {
+                query = include(query);
+            }
+            return query.FirstOrDefaultAsync(expression);
         }
     }
 }

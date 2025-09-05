@@ -20,7 +20,7 @@ namespace ARMForge.Kernel.Entities
 
         [MaxLength(32)]
         public string? PhoneNumber { get; set; }
-
+        
         [Required, MaxLength(500)]
         public string Address { get; set; } = string.Empty;
 

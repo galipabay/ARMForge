@@ -13,33 +13,22 @@ namespace ARMForge.Kernel.Entities
     {
         [MaxLength(64)]
         public string Firstname { get; set; }
-        
         [MaxLength(64)]
         public string Lastname { get; set; }
-        
         [JsonIgnore]
         public string PasswordHash { get; set; } = string.Empty;
-
         [MaxLength(320)]
         public string Email { get; set; } = string.Empty;
-
         [MaxLength(32)]
         public string? PhoneNumber { get; set; }
-
         public DateTimeOffset? LastLogin { get; set; }
-
         // HR alanları
         public DateTimeOffset? HireDate { get; set; }
-
         [MaxLength(64)]
         public string? Department { get; set; }
-
         public int? ManagerId { get; set; }
-
         public ICollection<User> DirectReports { get; set; } = new List<User>();
-
         public decimal Salary { get; set; }
-
         // 🔹 Many-to-many ilişki
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     }

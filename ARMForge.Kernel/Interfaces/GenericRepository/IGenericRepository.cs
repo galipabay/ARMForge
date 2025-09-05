@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System.Linq.Expressions;
 using ARMForge.Kernel.Entities;
+using Microsoft.EntityFrameworkCore.Query;
 
 namespace ARMForge.Kernel.Interfaces
 {
@@ -13,7 +14,10 @@ namespace ARMForge.Kernel.Interfaces
         Task AddAsync(T entity);
         void Update(T entity);
         void Delete(T entity);
-
+        Task<T> GetByConditionAsync(
+            Expression<Func<T, bool>> expression,
+            Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null
+        );
         Task<int> SaveChangesAsync();
     }
 }
