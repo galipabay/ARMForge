@@ -1,5 +1,7 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Kernel.Entities;
+using ARMForge.Types.DTOs;
+using ARMForge.Types.Mapping;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,33 +21,39 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
         {
             var products = await _productService.GetAllProductsAsync();
+            var productDtos = products.Select(p => ProductMapper.ToDto(p));
             return Ok(products);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProduct(int id)
+        public async Task<ActionResult<ProductDto>> GetProduct(int id)
         {
             var product = await _productService.GetProductByIdAsync(id);
             if (product == null) return NotFound();
-            return Ok(product);
+            return Ok(ProductMapper.ToDto(product));
         }
 
         [HttpPost]
-        public async Task<ActionResult<Product>> AddProduct([FromBody] Product product)
+        public async Task<ActionResult<ProductDto>> AddProduct([FromBody] ProductCreateDto productDto)
         {
+            var product = ProductMapper.ToEntity(productDto);
             var addedProduct = await _productService.AddProductAsync(product);
-            return CreatedAtAction(nameof(GetProduct), new { id = addedProduct.Id }, addedProduct);
+            return CreatedAtAction(nameof(GetProduct), new { id = addedProduct.Id }, ProductMapper.ToDto(addedProduct));
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product product)
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductUpdateDto productDto)
         {
-            if (id != product.Id) return BadRequest();
+            if (id != productDto.Id) return BadRequest();
 
-            var updatedProduct = await _productService.UpdateProductAsync(product);
+            var existingProduct = await _productService.GetProductByIdAsync(id);
+            if (existingProduct == null) return NotFound();
+
+            ProductMapper.ToEntity(productDto, existingProduct);
+            var updatedProduct = await _productService.UpdateProductAsync(existingProduct);
             if (updatedProduct == null) return NotFound();
 
             return NoContent();

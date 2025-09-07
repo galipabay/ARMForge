@@ -1,5 +1,6 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Kernel.Entities;
+using ARMForge.Types.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,18 +33,40 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Supplier>> AddSupplier([FromBody] Supplier supplier)
+        public async Task<ActionResult<Supplier>> AddSupplier([FromBody] SupplierDto supplierDto)
         {
+            // DTO'dan Entity'ye dönüşüm
+            var supplier = new Supplier
+            {
+                CompanyName = supplierDto.CompanyName,
+                ContactPerson = supplierDto.ContactPerson,
+                Email = supplierDto.Email,
+                PhoneNumber = supplierDto.PhoneNumber,
+                Address = supplierDto.Address,
+                TaxId = supplierDto.TaxId
+            };
+
             var addedSupplier = await _supplierService.AddSupplierAsync(supplier);
             return CreatedAtAction(nameof(GetSupplier), new { id = addedSupplier.Id }, addedSupplier);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSupplier(int id, [FromBody] Supplier supplier)
+        public async Task<IActionResult> UpdateSupplier(int id, [FromBody] SupplierDto supplierDto)
         {
-            if (id != supplier.Id) return BadRequest();
+            if (id != supplierDto.Id) return BadRequest();
 
-            var updatedSupplier = await _supplierService.UpdateSupplierAsync(supplier);
+            var existingSupplier = await _supplierService.GetSupplierByIdAsync(id);
+            if (existingSupplier == null) return NotFound();
+
+            // DTO'dan mevcut entity'yi güncelleme
+            existingSupplier.CompanyName = supplierDto.CompanyName;
+            existingSupplier.ContactPerson = supplierDto.ContactPerson;
+            existingSupplier.Email = supplierDto.Email;
+            existingSupplier.PhoneNumber = supplierDto.PhoneNumber;
+            existingSupplier.Address = supplierDto.Address;
+            existingSupplier.TaxId = supplierDto.TaxId;
+
+            var updatedSupplier = await _supplierService.UpdateSupplierAsync(existingSupplier);
             if (updatedSupplier == null) return NotFound();
 
             return NoContent();
