@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Linq.Expressions;
 using ARMForge.Kernel.Entities;
 using Microsoft.EntityFrameworkCore.Query;
+using System.Net.Mail;
 
 namespace ARMForge.Kernel.Interfaces
 {
@@ -19,5 +20,6 @@ namespace ARMForge.Kernel.Interfaces
             Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null
         );
         Task<int> SaveChangesAsync();
+        Task<T> AttachAsync(T entity);
     }
 }

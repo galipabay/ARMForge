@@ -5,14 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ARMForge.Kernel.Entities
+namespace ARMForge.Types.DTOs
 {
-    public class Vehicle : BaseEntity
+    public class VehicleDto
     {
-        [Required, MaxLength(16)]
+        [MaxLength(16)]
+        [Required]
         public string PlateNumber { get; set; } = string.Empty;
 
-        [Required, MaxLength(64)]
+        [MaxLength(64)]
+        [Required]
         public string VehicleType { get; set; } = string.Empty;
 
         [MaxLength(128)]
@@ -23,14 +25,8 @@ namespace ARMForge.Kernel.Entities
         [Required]
         public string Model { get; set; } = string.Empty;
 
-        [Range(0, int.MaxValue)]
         public int CapacityKg { get; set; }
-
-        [Range(0, int.MaxValue)]
-        public int CapacityM3 { get; set; }
-        public bool IsAvailable { get; set; } = true;
-
-        // Vehicle → Shipment ilişkisi
-        public ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
+        public int CapacityM3 { get; set; } // Yeni eklendi
+        public bool IsAvailable { get; set; }
     }
 }

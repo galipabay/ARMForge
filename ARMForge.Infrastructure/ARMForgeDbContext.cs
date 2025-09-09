@@ -45,6 +45,26 @@ namespace ARMForge.Infrastructure
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
+
+            // Driver - Shipment ilişkisi
+            // Bir sürücünün birden fazla sevkiyatı olabilir, bir sevkiyatın bir sürücüsü olur.
+            modelBuilder.Entity<Shipment>()
+                .HasOne(s => s.Driver)
+                .WithMany(d => d.Shipments)
+                .HasForeignKey(s => s.DriverId);
+            // Vehicle - Shipment ilişkisi
+            // Bir aracın birden fazla sevkiyatı olabilir, bir sevkiyatın bir aracı olur.
+            modelBuilder.Entity<Shipment>()
+                .HasOne(s => s.Vehicle)
+                .WithMany(v => v.Shipments)
+                .HasForeignKey(s => s.VehicleId);
+
+            // Order - Shipment ilişkisi
+            // Bir siparişin en fazla bir sevkiyatı olabilir (isteğe bağlı), bir sevkiyatın bir siparişi olur.
+            modelBuilder.Entity<Shipment>()
+                .HasOne(s => s.Order)
+                .WithMany(o => o.Shipments)
+                .HasForeignKey(s => s.OrderId);
         }
         
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

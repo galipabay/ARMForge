@@ -1,6 +1,7 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Kernel.Entities;
 using ARMForge.Kernel.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,16 +13,26 @@ namespace ARMForge.Business.Services
     public class OrderService : IOrderService
     {
         private readonly IGenericRepository<Order> _orderRepository;
+        private readonly IGenericRepository<Customer> _customerRepository;
 
-        public OrderService(IGenericRepository<Order> orderRepository)
+        public OrderService(IGenericRepository<Order> orderRepository, IGenericRepository<Customer> customerRepository)
         {
             _orderRepository = orderRepository;
+            _customerRepository = customerRepository;
         }
 
         public async Task<Order> AddOrderAsync(Order order)
         {
+            // Müşteri nesnesinin mevcut olduğunu varsayıyoruz, bu yüzden ID'si 0'dan farklı.
+            // O yüzden EF'ye bu nesneyi eklememesini, sadece bağlamasını söylüyoruz.
+            if (order.Customer != null && order.Customer.Id != 0)
+            {
+                //_context.Customers.Attach(order.Customer);
+                await _customerRepository.AttachAsync(order.Customer);
+            }
             await _orderRepository.AddAsync(order);
             await _orderRepository.SaveChangesAsync();
+
             return order;
         }
 

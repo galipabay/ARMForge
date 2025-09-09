@@ -34,10 +34,11 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Order>> AddOrder([FromBody] Order order)
+        public async Task<ActionResult<int>> AddOrder([FromBody] Order order)
         {
             var addedOrder = await _orderService.AddOrderAsync(order);
-            return CreatedAtAction(nameof(GetOrder), new { id = addedOrder.Id }, addedOrder);
+            // Artık tam nesneyi değil, sadece ID'yi döndürüyoruz
+            return CreatedAtAction(nameof(GetOrder), new { id = addedOrder.Id }, addedOrder.Id);
         }
 
         [HttpPut("{id}")]

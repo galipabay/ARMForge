@@ -47,5 +47,11 @@ namespace ARMForge.Infrastructure
             }
             return query.FirstOrDefaultAsync(expression);
         }
+
+        public Task<T> AttachAsync(T entity)
+        {
+            _dbSet.Attach(entity);
+            return Task.FromResult(entity);
+        }
     }
 }
