@@ -9,14 +9,9 @@ namespace ARMForge.Web.Api.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class CustomerController : ControllerBase
+    public class CustomerController(ICustomerService customerService) : ControllerBase
     {
-        private readonly ICustomerService _customerService;
-
-        public CustomerController(ICustomerService customerService)
-        {
-            _customerService = customerService;
-        }
+        private readonly ICustomerService _customerService = customerService;
 
         [HttpGet]
         public async Task<IActionResult> GetAllCustomers()

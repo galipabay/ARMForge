@@ -1,7 +1,8 @@
 using ARMForge.Business.Interfaces;
+using ARMForge.Business.Mapping;
 using ARMForge.Business.Services;
 using ARMForge.Infrastructure;
-using ARMForge.Kernel.Interfaces;
+using ARMForge.Kernel.Interfaces.GenericRepository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -16,10 +17,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<ARMForgeDbContext>(options =>
-{
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
+builder.Services.AddDbContext<ARMForgeDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IVehicleService, VehicleService>();
@@ -53,6 +51,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddAuthorization();
 
 

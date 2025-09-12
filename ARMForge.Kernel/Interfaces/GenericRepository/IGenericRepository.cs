@@ -5,7 +5,7 @@ using ARMForge.Kernel.Entities;
 using Microsoft.EntityFrameworkCore.Query;
 using System.Net.Mail;
 
-namespace ARMForge.Kernel.Interfaces
+namespace ARMForge.Kernel.Interfaces.GenericRepository
 {
     public interface IGenericRepository<T> where T : BaseEntity
     {
@@ -21,5 +21,7 @@ namespace ARMForge.Kernel.Interfaces
         );
         Task<int> SaveChangesAsync();
         Task<T> AttachAsync(T entity);
+
+        Task<List<T>> GetAllWithIncludesAsync(params Expression<Func<T, object>>[] includes);
     }
 }

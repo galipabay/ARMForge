@@ -1,5 +1,5 @@
 ﻿using ARMForge.Kernel.Entities;
-using ARMForge.Kernel.Interfaces;
+using ARMForge.Kernel.Interfaces.GenericRepository;
 using ARMForge.Kernel.Interfaces.UnitOfWork;
 
 namespace ARMForge.Infrastructure 

@@ -1,5 +1,5 @@
 ﻿using ARMForge.Kernel.Entities;
-using ARMForge.Kernel.Interfaces;
+using ARMForge.Kernel.Interfaces.GenericRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using System;
@@ -52,6 +52,21 @@ namespace ARMForge.Infrastructure
         {
             _dbSet.Attach(entity);
             return Task.FromResult(entity);
+        }
+
+        public async Task<List<T>> GetAllWithIncludesAsync(params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet.AsQueryable();
+
+            if (includes != null)
+            {
+                foreach (var include in includes)
+                {
+                    query = query.Include(include);
+                }
+            }
+
+            return await query.ToListAsync();
         }
     }
 }

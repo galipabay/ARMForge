@@ -1,4 +1,5 @@
 ﻿using ARMForge.Kernel.Entities;
+using ARMForge.Kernel.Interfaces.GenericRepository;
 using System;
 using System.Collections.Generic;
 using System.Linq;

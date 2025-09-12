@@ -1,6 +1,6 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Kernel.Entities;
-using ARMForge.Kernel.Interfaces;
+using ARMForge.Kernel.Interfaces.GenericRepository;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

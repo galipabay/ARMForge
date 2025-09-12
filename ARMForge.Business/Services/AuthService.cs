@@ -1,6 +1,6 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Kernel.Entities;
-using ARMForge.Kernel.Interfaces;
+using ARMForge.Kernel.Interfaces.GenericRepository;
 using ARMForge.Types.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
