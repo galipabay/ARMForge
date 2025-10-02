@@ -1,6 +1,7 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Infrastructure;
 using ARMForge.Kernel.Entities;
+using ARMForge.Types.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -40,9 +41,12 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Driver>> AddDriver([FromBody] Driver driver)
+        public async Task<ActionResult<DriverDto>> AddDriver([FromBody] DriverCreateDto driverDto)
         {
-            var addedDriver = await _driverService.AddDriverAsync(driver);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var addedDriver = await _driverService.CreateDriverAsync(driverDto);
             return CreatedAtAction(nameof(GetDriver), new { id = addedDriver.Id }, addedDriver);
         }
 

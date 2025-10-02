@@ -3,6 +3,8 @@ using ARMForge.Business.Mapping;
 using ARMForge.Business.Services;
 using ARMForge.Infrastructure;
 using ARMForge.Kernel.Interfaces.GenericRepository;
+using ARMForge.Kernel.Interfaces.UnitOfWork;
+using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -34,6 +36,9 @@ builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 builder.Services.AddScoped<IPurchaseOrderItemService, PurchaseOrderItemService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -53,6 +58,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddAuthorization();
+
+// Program.cs'de
+var mappingConfig = new MapperConfiguration(mc => mc.AddProfile(new MappingProfile()));
+
+IMapper mapper = mappingConfig.CreateMapper();
+builder.Services.AddSingleton(mapper);
 
 
 var app = builder.Build();

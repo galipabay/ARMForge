@@ -1,6 +1,10 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Kernel.Entities;
 using ARMForge.Kernel.Interfaces.GenericRepository;
+using ARMForge.Kernel.Interfaces.UnitOfWork;
+using ARMForge.Types.DTOs;
+using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -13,10 +17,24 @@ namespace ARMForge.Business.Services
     public class DriverService : IDriverService
     {
         private readonly IGenericRepository<Driver> _driverRepository;
+        private readonly IMapper _mapper;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public DriverService(IGenericRepository<Driver> driverRepository)
+        public DriverService(IGenericRepository<Driver> driverRepository,IMapper mapper,IUnitOfWork unitOfWork)
         {
             _driverRepository = driverRepository;
+            _mapper = mapper;
+            _unitOfWork = unitOfWork;
+        }
+
+        public async Task<DriverDto> CreateDriverAsync(DriverCreateDto driverDto)
+        {
+            var driver = _mapper.Map<Driver>(driverDto);
+
+            await _driverRepository.AddAsync(driver);
+            await _unitOfWork.CommitAsync();
+
+            return _mapper.Map<DriverDto>(driver);
         }
         public async Task<Driver> AddDriverAsync(Driver driver)
         {

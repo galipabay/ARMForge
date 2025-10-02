@@ -11,12 +11,9 @@ namespace ARMForge.Kernel.Entities
     {
         [MaxLength(64)]
         public string Name { get; set; }
-        
         [MaxLength(500)]
         public string Description { get; set; }
-
         public bool IsSystemRole { get; set; }
-
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     }
 }

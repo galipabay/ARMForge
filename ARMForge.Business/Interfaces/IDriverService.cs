@@ -1,4 +1,5 @@
 ﻿using ARMForge.Kernel.Entities;
+using ARMForge.Types.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,6 @@ namespace ARMForge.Business.Interfaces
         Task<Driver> AddDriverAsync(Driver driver);
         Task<Driver> UpdateDriverAsync(Driver driver);
         Task<bool> DeleteDriverAsync(int id);
+        Task<DriverDto> CreateDriverAsync(DriverCreateDto driver);
     }
 }

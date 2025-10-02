@@ -1,4 +1,5 @@
 ﻿using ARMForge.Kernel.Entities;
+using ARMForge.Types.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +12,9 @@ namespace ARMForge.Business.Interfaces
     {
         Task<IEnumerable<Vehicle>> GetAllVehiclesAsync();
         Task<Vehicle> GetVehicleByIdAsync(int id);
-        Task<Vehicle> AddVehicleAsync(Vehicle vehicle);
+        //Task<Vehicle> AddVehicleAsync(Vehicle vehicle);
         Task<Vehicle> UpdateVehicleAsync(Vehicle vehicle);
         Task<bool> DeleteVehicleAsync(int id);
+        Task<VehicleDto> AddVehicleAsync(VehicleCreateDto vehicleDto);
     }
 }

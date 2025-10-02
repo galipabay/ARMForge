@@ -1,6 +1,9 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Kernel.Entities;
 using ARMForge.Kernel.Interfaces.GenericRepository;
+using ARMForge.Kernel.Interfaces.UnitOfWork;
+using ARMForge.Types.DTOs;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -10,10 +13,28 @@ using System.Threading.Tasks;
 
 namespace ARMForge.Business.Services
 {
-    public class OrderService(IGenericRepository<Order> orderRepository, IGenericRepository<Customer> customerRepository) : IOrderService
+    public class OrderService(IGenericRepository<Order> orderRepository, IGenericRepository<Customer> customerRepository,IMapper mapper,IUnitOfWork unitOfWork) : IOrderService
     {
         private readonly IGenericRepository<Order> _orderRepository = orderRepository;
         private readonly IGenericRepository<Customer> _customerRepository = customerRepository;
+        private readonly IMapper _mapper = mapper;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+
+        public async Task<Order> CreateOrder(OrderCreateDto orderDto)
+        {
+            // DTO'dan Entity'ye dönüşüm burada yapılır
+            var order = _mapper.Map<Order>(orderDto);
+
+            // Eğer Customer nesnesini manuel olarak ataman gerekiyorsa, burada yaparsın:
+            // var customer = await _orderRepository.GetCustomerById(orderDto.CustomerId);
+            // if (customer == null) throw new Exception("Müşteri bulunamadı.");
+            // order.Customer = customer;
+
+            await _orderRepository.AddAsync(order);
+            await _unitOfWork.CommitAsync();
+
+            return order;
+        }
 
         public async Task<Order> AddOrderAsync(Order order)
         {

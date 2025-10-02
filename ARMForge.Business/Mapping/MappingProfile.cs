@@ -18,6 +18,23 @@ namespace ARMForge.Business.Mapping
 
             // Order entity'sini OrderDto'ya dönüştür
             CreateMap<Order, OrderDto>();
+
+            // İşte bu satır eksik veya yanlış olabilir!
+            CreateMap<OrderCreateDto, Order>()
+                .ForMember(dest => dest.Customer, opt => opt.Ignore()); // Müşteri navigasyon özelliğini Ignore et
+
+            CreateMap<DriverCreateDto, Driver>()
+                .ForMember(dest => dest.User, opt => opt.Ignore()); // Müşteri navigasyon özelliğini Ignore et
+
+            CreateMap<DriverDto, Driver>();
+
+            CreateMap<VehicleCreateDto, Vehicle>();
+
+            CreateMap<Vehicle, VehicleDto>();
+
+            CreateMap<Shipment, ShipmentDto>();
+
+            CreateMap<ShipmentCreateDto, Shipment>();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using ARMForge.Kernel.Entities;
+using ARMForge.Types.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,5 +15,6 @@ namespace ARMForge.Business.Interfaces
         Task<Order> AddOrderAsync(Order order);
         Task<Order> UpdateOrderAsync(Order order);
         Task<bool> DeleteOrderAsync(int id);
+        Task<Order> CreateOrder(OrderCreateDto orderDto); // Yeni metot
     }
 }

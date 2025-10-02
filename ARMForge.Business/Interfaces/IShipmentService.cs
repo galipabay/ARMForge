@@ -1,4 +1,5 @@
 ﻿using ARMForge.Kernel.Entities;
+using ARMForge.Types.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +12,8 @@ namespace ARMForge.Business.Interfaces
     {
         Task<IEnumerable<Shipment>> GetAllShipmentsAsync();
         Task<Shipment> GetShipmentByIdAsync(int id);
-        Task<Shipment> AddShipmentAsync(Shipment shipment);
         Task<Shipment> UpdateShipmentAsync(Shipment shipment);
         Task<bool> DeleteShipmentAsync(int id);
+        Task<ShipmentDto> AddShipmentAsync(ShipmentCreateDto shipment);
     }
 }

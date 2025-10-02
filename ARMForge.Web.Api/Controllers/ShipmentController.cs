@@ -1,6 +1,8 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Business.Services;
 using ARMForge.Kernel.Entities;
+using ARMForge.Types.DTOs;
+using Humanizer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,10 +35,20 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Shipment>> AddShipment([FromBody] Shipment shipment)
+        public async Task<ActionResult<ShipmentDto>> AddShipment([FromBody] ShipmentCreateDto shipmentDto)
         {
-            var addedShipment = await _shipmentService.AddShipmentAsync(shipment);
-            return CreatedAtAction(nameof(GetShipment), new { id = addedShipment.Id }, addedShipment);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var shipment = await _shipmentService.AddShipmentAsync(shipmentDto);
+                return Ok(shipment);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]

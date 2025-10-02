@@ -1,5 +1,7 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Kernel.Entities;
+using ARMForge.Types.DTOs;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -29,11 +31,10 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<int>> AddOrder([FromBody] Order order)
+        public async Task<ActionResult<Order>> AddOrder(OrderCreateDto orderDto) // Burası değişti!
         {
-            var addedOrder = await _orderService.AddOrderAsync(order);
-            // Artık tam nesneyi değil, sadece ID'yi döndürüyoruz
-            return CreatedAtAction(nameof(GetOrder), new { id = addedOrder.Id }, addedOrder.Id);
+            var createdOrder = await _orderService.CreateOrder(orderDto); // DTO'yu direk servise gönder
+            return CreatedAtAction(nameof(GetOrder), new { id = createdOrder.Id }, createdOrder);
         }
 
         [HttpPut("{id}")]

@@ -1,5 +1,6 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Kernel.Entities;
+using ARMForge.Types.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,16 +31,16 @@ namespace ARMForge.Web.Api.Controllers
             }
             return Ok(vehicle);
         }
+
         [HttpPost]
-        public async Task<IActionResult> AddVehicle([FromBody] Vehicle vehicle)
+        public async Task<IActionResult> AddVehicle([FromBody] VehicleCreateDto vehicleDto)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(ModelState);
-            }
-            var createdVehicle = await _vehicleService.AddVehicleAsync(vehicle);
-            return CreatedAtAction(nameof(GetVehicleById), new { id = createdVehicle.Id }, createdVehicle);
+            var addedVehicle = await _vehicleService.AddVehicleAsync(vehicleDto);
+            return CreatedAtAction(nameof(GetVehicleById), new { id = addedVehicle.Id }, addedVehicle);
         }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateVehicle(int id, [FromBody] Vehicle vehicle)
         {
