@@ -1,6 +1,7 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Kernel.Entities;
 using ARMForge.Kernel.Interfaces.GenericRepository;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +28,18 @@ namespace ARMForge.Business.Services
         {
             return await _userRepository.GetByIdAsync(id);
         }
-
+        public async Task<bool> CheckUserById(int id)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null || user.IsActive == false)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
         public async Task<User> AddUserAsync(User user)
         {
             await _userRepository.AddAsync(user);

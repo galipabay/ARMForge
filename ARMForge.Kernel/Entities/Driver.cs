@@ -22,11 +22,11 @@ namespace ARMForge.Kernel.Entities
             F
         }
         public DriverLicenseType LicenseType { get; set; }
-        
+
         public bool IsOnDuty { get; set; }
-        
+
         public DateTime? LastInspectionDate { get; set; }
-        
+
         public bool IsAvailable { get; set; }
 
         public ICollection<Shipment>? Shipments { get; set; }

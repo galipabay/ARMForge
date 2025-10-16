@@ -36,12 +36,6 @@ namespace ARMForge.Business.Services
 
             return _mapper.Map<DriverDto>(driver);
         }
-        public async Task<Driver> AddDriverAsync(Driver driver)
-        {
-            await _driverRepository.AddAsync(driver);
-            await _driverRepository.SaveChangesAsync();
-            return driver; // Eklenen sürücüyü döndür
-        }
 
         public async Task<bool> DeleteDriverAsync(int id)
         {
@@ -53,21 +47,58 @@ namespace ARMForge.Business.Services
             _driverRepository.Delete(driverToDelete);
             return await _driverRepository.SaveChangesAsync() > 0;
         }
-        public async Task<IEnumerable<Driver>> GetAllDriversAsync()
+        public async Task<IEnumerable<DriverDto>> GetAllDriversAsync()
         {
-            return await _driverRepository.GetAllAsync();
+            // 1️⃣ EF Core'dan User navigation property ile birlikte driverları al
+            var drivers = await _driverRepository.GetAllWithIncludesAsync(d => d.User);
+
+            // 2️⃣ AutoMapper ile DTO'ya çevir
+            var driverDtos = _mapper.Map<IEnumerable<DriverDto>>(drivers);
+
+            // 3️⃣ DTO listesi dön
+            return driverDtos;
         }
 
-        public async Task<Driver> GetDriverByIdAsync(int id)
+        public async Task<DriverDto?> GetDriverByIdAsync(int id)
         {
-            return await _driverRepository.GetByIdAsync(id);
+            // 1️⃣ Driver'ı User navigation property ile al
+            var driver = await _driverRepository.GetByConditionAsync(
+                d => d.Id == id,
+                include: q => q.Include(d => d.User)
+            );
+
+            if (driver == null)
+                return null;
+
+            // 2️⃣ Entity → DTO mapping (AutoMapper veya manuel)
+            var driverDto = _mapper.Map<DriverDto>(driver);
+
+            return driverDto;
         }
 
-        public async Task<Driver> UpdateDriverAsync(Driver driver)
+        public async Task<DriverDto?> UpdateDriverAsync(int id, DriverUpdateDto dto)
         {
-            _driverRepository.Update(driver);
+            var driver = await _driverRepository.GetByConditionAsync(d => d.Id == id, include: q => q.Include(d => d.User));
+            if (driver == null)
+                return null;
+
+            // Alanları güncelle
+            if (dto.IsOnDuty.HasValue)
+                driver.IsOnDuty = dto.IsOnDuty.Value;
+
+            if (dto.LicenseType.HasValue)
+                driver.LicenseType = dto.LicenseType.Value; // artık enum ile uyumlu
+
+            if (dto.IsAvailable.HasValue)
+                driver.IsAvailable = dto.IsAvailable.Value;
+
+            // UpdatedAt güncelle
+            driver.UpdatedAt = DateTime.UtcNow;
+
+            //_driverRepository.Update(driver);
             await _driverRepository.SaveChangesAsync();
-            return driver; // Güncellenen sürücüyü döndür
+            // DTO’ya map et
+            return _mapper.Map<DriverDto>(driver);
         }
     }
 }

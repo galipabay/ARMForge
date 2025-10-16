@@ -20,18 +20,18 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Shipment>>> GetShipments()
+        public async Task<ActionResult<IEnumerable<ShipmentDto>>> GetAllShipments()
         {
             var shipments = await _shipmentService.GetAllShipmentsAsync();
-            return Ok(shipments);
+            return Ok(shipments); // artık service DTO döndürüyor
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Shipment>> GetShipment(int id)
+        public async Task<ActionResult<ShipmentDto>> GetShipment(int id)
         {
-            var shipment = await _shipmentService.GetShipmentByIdAsync(id);
-            if (shipment == null) return NotFound();
-            return Ok(shipment);
+            var shipmentDto = await _shipmentService.GetShipmentByIdAsync(id);
+            if (shipmentDto == null) return NotFound();
+            return Ok(shipmentDto);
         }
 
         [HttpPost]
@@ -42,8 +42,8 @@ namespace ARMForge.Web.Api.Controllers
 
             try
             {
-                var shipment = await _shipmentService.AddShipmentAsync(shipmentDto);
-                return Ok(shipment);
+                var shipmentDtoResult = await _shipmentService.AddShipmentAsync(shipmentDto);
+                return CreatedAtAction("GetShipment", new { id = shipmentDtoResult.Id }, shipmentDtoResult);
             }
             catch (InvalidOperationException ex)
             {
@@ -52,14 +52,14 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateShipment(int id, [FromBody] Shipment shipment)
+        public async Task<IActionResult> UpdateShipment(int id, [FromBody] ShipmentUpdateDto shipmentDto)
         {
-            if (id != shipment.Id) return BadRequest();
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var updatedShipment = await _shipmentService.UpdateShipmentAsync(shipment);
+            var updatedShipment = await _shipmentService.UpdateShipmentAsync(id, shipmentDto);
             if (updatedShipment == null) return NotFound();
 
-            return NoContent();
+            return Ok(updatedShipment); // artık DTO dönüyor
         }
 
         [HttpDelete("{id}")]

@@ -1,5 +1,6 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Kernel.Entities;
+using ARMForge.Types.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -43,17 +44,16 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCustomer(int id, [FromBody] Customer customer)
+        public async Task<IActionResult> UpdateCustomer(int id, [FromBody] CustomerUpdateDto dto)
         {
-            if (id != customer.Id)
-            {
-                return BadRequest();
-            }
-            var updatedCustomer = await _customerService.UpdateCustomerAsync(customer);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var updatedCustomer = await _customerService.UpdateCustomerAsync(id, dto);
+
             if (updatedCustomer == null)
-            {
                 return NotFound();
-            }
+
             return NoContent();
         }
 

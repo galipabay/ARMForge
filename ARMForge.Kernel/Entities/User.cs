@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ARMForge.Kernel.Entities
 {
-    public class User : BaseEntity 
+    public class User : BaseEntity
     {
         [MaxLength(64)]
         public string Firstname { get; set; }

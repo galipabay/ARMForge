@@ -5,6 +5,7 @@ using ARMForge.Types.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -19,10 +20,12 @@ namespace ARMForge.Web.Api.Controllers
     public class DriverController : ControllerBase
     {
         private readonly IDriverService _driverService;
+        private readonly IUserService _userService;
 
-        public DriverController(IDriverService driverService)
+        public DriverController(IDriverService driverService, IUserService userService)
         {
             _driverService = driverService;
+            _userService = userService;
         }
 
         [HttpGet]
@@ -33,16 +36,23 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Driver>> GetDriver(int id)
+        public async Task<ActionResult<DriverDto>> GetDriver(int id)
         {
-            var driver = await _driverService.GetDriverByIdAsync(id);
-            if (driver == null) return NotFound();
-            return Ok(driver);
+            var driverDto = await _driverService.GetDriverByIdAsync(id);
+            if (driverDto == null) return NotFound();
+            return Ok(driverDto);
         }
 
         [HttpPost]
         public async Task<ActionResult<DriverDto>> AddDriver([FromBody] DriverCreateDto driverDto)
         {
+            var userId_check = await _userService.CheckUserById(driverDto.UserId);
+            if (userId_check == false)
+            {
+                ModelState.AddModelError("UserId", "The specified UserId does not exist.");
+                return BadRequest(ModelState);
+            }
+
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -51,15 +61,19 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateDriver(int id, [FromBody] Driver driver)
+        public async Task<IActionResult> UpdateDriver(int id, [FromBody] DriverUpdateDto driverUpdateDto)
         {
-            if (id != driver.Id) return BadRequest();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            var updatedDriver = await _driverService.UpdateDriverAsync(driver);
-            if (updatedDriver == null) return NotFound();
+            var updatedDriver = await _driverService.UpdateDriverAsync(id, driverUpdateDto);
 
-            return NoContent();
+            if (updatedDriver == null)
+                return NotFound();
+
+            return Ok(updatedDriver);
         }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDriver(int id)
         {

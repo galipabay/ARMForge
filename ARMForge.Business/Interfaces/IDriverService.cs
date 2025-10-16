@@ -10,10 +10,10 @@ namespace ARMForge.Business.Interfaces
 {
     public interface IDriverService
     {
-        Task<IEnumerable<Driver>> GetAllDriversAsync();
-        Task<Driver> GetDriverByIdAsync(int id);
-        Task<Driver> AddDriverAsync(Driver driver);
-        Task<Driver> UpdateDriverAsync(Driver driver);
+        Task<IEnumerable<DriverDto>> GetAllDriversAsync();
+        Task<DriverDto?> GetDriverByIdAsync(int id);
+        //Task<Driver> AddDriverAsync(Driver driver);
+        Task<DriverDto?> UpdateDriverAsync(int id,DriverUpdateDto driver);
         Task<bool> DeleteDriverAsync(int id);
         Task<DriverDto> CreateDriverAsync(DriverCreateDto driver);
     }

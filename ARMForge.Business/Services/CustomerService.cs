@@ -31,7 +31,10 @@ namespace ARMForge.Business.Services
             {
                 return false;
             }
-            _customerRepository.Delete(customerToDelete);
+
+            customerToDelete.IsActive= false; // Soft delete
+
+            _customerRepository.Update(customerToDelete);
             return await _customerRepository.SaveChangesAsync() > 0;
         }
 
@@ -51,10 +54,20 @@ namespace ARMForge.Business.Services
             return await _customerRepository.GetByIdAsync(id);
         }
 
-        public async Task<Customer> UpdateCustomerAsync(Customer customer)
+        public async Task<Customer> UpdateCustomerAsync(int id, CustomerUpdateDto customerUpdateDto)
         {
+            var customer = await _customerRepository.GetByConditionAsync(c => c.Id == id);
+
+            if (customer == null)
+                return null;
+
+            // Mapping işlemi burada
+            _mapper.Map(customerUpdateDto, customer);
+
+            customer.UpdatedAt = DateTime.UtcNow;
             _customerRepository.Update(customer);
             await _customerRepository.SaveChangesAsync();
+
             return customer;
         }
     }
