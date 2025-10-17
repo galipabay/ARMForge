@@ -10,10 +10,10 @@ namespace ARMForge.Business.Interfaces
 {
     public interface ICustomerService
     {
-        Task<IEnumerable<CustomerDto>> GetAllCustomersAsync();
-        Task<Customer> GetCustomerByIdAsync(int id);
-        Task<Customer> AddCustomerAsync(Customer customer);
-        Task<Customer> UpdateCustomerAsync(int id,CustomerUpdateDto customerUpdateDto);
+        Task<IEnumerable<CustomerDto>> GetAllCustomersAsync(bool includeInactive = false);
+        Task<CustomerDto?> GetCustomerByIdAsync(int id);
+        Task<CustomerDto> AddCustomerAsync(CustomerCreateDto customerDto);
+        Task<CustomerDto> UpdateCustomerAsync(int id,CustomerUpdateDto customerUpdateDto);
         Task<bool> DeleteCustomerAsync(int id);
     }
 }

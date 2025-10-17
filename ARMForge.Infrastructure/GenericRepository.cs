@@ -25,7 +25,7 @@ namespace ARMForge.Infrastructure
         public async Task AddAsync(T entity) => await _dbSet.AddAsync(entity);
         public void Delete(T entity) => _dbSet.Remove(entity);
         public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.ToListAsync();
-        public async Task<T> GetByIdAsync(int id) => await _dbSet.FindAsync(id);
+        public async Task<T?> GetByIdAsync(int id) => await _dbSet.FindAsync(id);
         public void Update(T entity) => _dbSet.Update(entity);
 
         public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
@@ -38,7 +38,7 @@ namespace ARMForge.Infrastructure
             return await _context.SaveChangesAsync();
         }
 
-        public Task<T> GetByConditionAsync(Expression<Func<T, bool>> expression, Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null)
+        public Task<T?> GetByConditionAsync(Expression<Func<T, bool>> expression, Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null)
         {
             IQueryable<T> query = _dbSet;
             if (include != null)
@@ -67,6 +67,18 @@ namespace ARMForge.Infrastructure
             }
 
             return await query.ToListAsync();
+        }
+
+        public IQueryable<T> GetQueryable(bool includeInactive = false)
+        {
+            var query = _dbSet.AsQueryable();
+
+            if (!includeInactive && typeof(BaseEntity).IsAssignableFrom(typeof(T)))
+            {
+                query = query.Where(x => EF.Property<bool>(x, "IsActive"));
+            }
+
+            return query;
         }
     }
 }

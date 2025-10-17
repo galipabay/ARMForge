@@ -15,14 +15,14 @@ namespace ARMForge.Web.Api.Controllers
         private readonly ICustomerService _customerService = customerService;
 
         [HttpGet]
-        public async Task<IActionResult> GetAllCustomers()
+        public async Task<ActionResult<IEnumerable<CustomerDto>>> GetAllCustomers([FromQuery] bool includeInactive = false)
         {
-            var customers = await _customerService.GetAllCustomersAsync();
+            var customers = await _customerService.GetAllCustomersAsync(includeInactive);
             return Ok(customers);
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetCustomerById(int id)
+        public async Task<ActionResult<CustomerDto>> GetCustomerById(int id)
         {
             var customer = await _customerService.GetCustomerByIdAsync(id);
             if (customer == null)
@@ -33,28 +33,40 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddCustomer([FromBody] Kernel.Entities.Customer customer)
+        public async Task<ActionResult<CustomerDto>> AddCustomer([FromBody] CustomerCreateDto customerDto)
         {
-            if (customer == null)
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            try
             {
-                return BadRequest();
+                var createdCustomer = await _customerService.AddCustomerAsync(customerDto);
+                return CreatedAtAction(nameof(GetCustomerById), new { id = createdCustomer.Id }, createdCustomer);
             }
-            var createdCustomer = await _customerService.AddCustomerAsync(customer);
-            return CreatedAtAction(nameof(GetCustomerById), new { id = createdCustomer.Id }, createdCustomer);
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCustomer(int id, [FromBody] CustomerUpdateDto dto)
+        public async Task<ActionResult<CustomerDto>> UpdateCustomer(int id, [FromBody] CustomerUpdateDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var updatedCustomer = await _customerService.UpdateCustomerAsync(id, dto);
-
-            if (updatedCustomer == null)
-                return NotFound();
-
-            return NoContent();
+            try
+            {
+                var result = await _customerService.UpdateCustomerAsync(id, dto);
+                return Ok(result);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex) // ✅ Genel exception ekle
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]

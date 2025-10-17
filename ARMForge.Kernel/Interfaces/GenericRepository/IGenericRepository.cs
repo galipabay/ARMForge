@@ -11,11 +11,11 @@ namespace ARMForge.Kernel.Interfaces.GenericRepository
     {
         Task<IEnumerable<T>> GetAllAsync();
         Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
-        Task<T> GetByIdAsync(int id);
+        Task<T?> GetByIdAsync(int id);
         Task AddAsync(T entity);
         void Update(T entity);
         void Delete(T entity);
-        Task<T> GetByConditionAsync(
+        Task<T?> GetByConditionAsync(
             Expression<Func<T, bool>> expression,
             Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null
         );
@@ -23,5 +23,7 @@ namespace ARMForge.Kernel.Interfaces.GenericRepository
         Task<T> AttachAsync(T entity);
 
         Task<List<T>> GetAllWithIncludesAsync(params Expression<Func<T, object>>[] includes);
+
+        IQueryable<T> GetQueryable(bool includeInactive = false);
     }
 }

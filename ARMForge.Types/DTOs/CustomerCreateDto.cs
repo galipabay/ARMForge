@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ARMForge.Types.DTOs
 {
-    public class CustomerUpdateDto
+    public class CustomerCreateDto
     {
         [Required, MaxLength(128)]
         public string CompanyName { get; set; } = string.Empty;

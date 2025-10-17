@@ -22,8 +22,8 @@ namespace ARMForge.Kernel.Entities
         public decimal TotalAmount { get; set; }
 
         [MaxLength(32)]
-        public string OrderNumber { get; set; }
+        public string OrderNumber { get; set; } = string.Empty;
 
-        public ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
+        public ICollection<Shipment> Shipments { get; set; } = [];
 	}
 }

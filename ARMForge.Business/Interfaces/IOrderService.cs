@@ -10,7 +10,7 @@ namespace ARMForge.Business.Interfaces
 {
     public interface IOrderService
     {
-        Task<IEnumerable<Order>> GetAllOrdersAsync();
+        Task<IEnumerable<OrderDto>> GetAllOrdersAsync();
         Task<Order> GetOrderByIdAsync(int id);
         Task<Order> AddOrderAsync(Order order);
         Task<Order> UpdateOrderAsync(Order order);

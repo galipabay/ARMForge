@@ -14,22 +14,23 @@ namespace ARMForge.Business.Mapping
         public MappingProfile()
         {
             #region Customer
-            // Customer entity'sini CustomerDto'ya dönüştür
-            CreateMap<Customer, CustomerDto>();
-
+            CreateMap<CustomerCreateDto, Customer>();
             CreateMap<CustomerUpdateDto, Customer>()
-            .ForMember(dest => dest.Id, opt => opt.Ignore()); // Id’yi koru 
-            #endregion
+                .ForMember(dest => dest.Id, opt => opt.Ignore()); // Id’yi koru
 
+            CreateMap<Customer, CustomerDto>()
+                .ForMember(dest => dest.OrderCount, opt => opt.MapFrom(src => src.Orders.Count));
+            #endregion
             #region Order
             // Order entity'sini OrderDto'ya dönüştür
-            CreateMap<Order, OrderDto>();
+            CreateMap<Order, OrderDto>()
+                .ForMember(dest => dest.CustomerCompanyName, opt => opt.MapFrom(src => src.Customer.CompanyName))
+                .ForMember(dest => dest.Shipments, opt => opt.MapFrom(src => src.Shipments));
 
             // İşte bu satır eksik veya yanlış olabilir!
             CreateMap<OrderCreateDto, Order>()
                 .ForMember(dest => dest.Customer, opt => opt.Ignore()); // Müşteri navigasyon özelliğini Ignore et 
             #endregion
-
             #region Driver
             CreateMap<DriverCreateDto, Driver>()
                     .ForMember(dest => dest.User, opt => opt.Ignore()); // Müşteri navigasyon özelliğini Ignore et
@@ -40,13 +41,11 @@ namespace ARMForge.Business.Mapping
 
             CreateMap<DriverDto, Driver>();
             #endregion
-
             #region Vehicle
             CreateMap<VehicleCreateDto, Vehicle>();
 
             CreateMap<Vehicle, VehicleDto>();
             #endregion
-
             #region Shipment
             CreateMap<ShipmentCreateDto, Shipment>();
             CreateMap<Shipment, ShipmentDto>()
@@ -62,6 +61,8 @@ namespace ARMForge.Business.Mapping
             CreateMap<ShipmentUpdateDto, Shipment>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
             // null gönderilen alanlar güncellenmez
+
+            CreateMap<Shipment, ShipmentInfoDto>();
             #endregion
         }
     }

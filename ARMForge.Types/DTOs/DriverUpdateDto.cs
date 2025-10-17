@@ -9,8 +9,8 @@ namespace ARMForge.Types.DTOs
 {
     public class DriverUpdateDto
     {
-        public bool? IsOnDuty { get; set; }
-        public DriverLicenseType? LicenseType { get; set; }
-        public bool? IsAvailable { get; set; } // yeni alan eklendi
+        public bool IsOnDuty { get; set; }
+        public DriverLicenseType LicenseType { get; set; }
+        public bool IsAvailable { get; set; } // yeni alan eklendi
     }
 }

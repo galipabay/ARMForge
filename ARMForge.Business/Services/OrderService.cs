@@ -60,9 +60,14 @@ namespace ARMForge.Business.Services
             return await _orderRepository.SaveChangesAsync() > 0;
         }
 
-        public async Task<IEnumerable<Order>> GetAllOrdersAsync()
+        public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
         {
-            return await _orderRepository.GetAllAsync();
+            var orders = await _orderRepository.GetAllWithIncludesAsync(
+                o => o.Customer,
+                o => o.Shipments
+            );
+
+            return _mapper.Map<IEnumerable<OrderDto>>(orders);
         }
 
         public async Task<Order> GetOrderByIdAsync(int id)

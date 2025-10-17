@@ -83,20 +83,15 @@ namespace ARMForge.Business.Services
                 return null;
 
             // Alanları güncelle
-            if (dto.IsOnDuty.HasValue)
-                driver.IsOnDuty = dto.IsOnDuty.Value;
-
-            if (dto.LicenseType.HasValue)
-                driver.LicenseType = dto.LicenseType.Value; // artık enum ile uyumlu
-
-            if (dto.IsAvailable.HasValue)
-                driver.IsAvailable = dto.IsAvailable.Value;
+            driver.IsOnDuty = dto.IsOnDuty;
+            driver.LicenseType = dto.LicenseType;
+            driver.IsAvailable = dto.IsAvailable;
 
             // UpdatedAt güncelle
             driver.UpdatedAt = DateTime.UtcNow;
 
-            //_driverRepository.Update(driver);
-            await _driverRepository.SaveChangesAsync();
+            _driverRepository.Update(driver);
+            await _unitOfWork.CommitAsync();
             // DTO’ya map et
             return _mapper.Map<DriverDto>(driver);
         }

@@ -16,7 +16,7 @@ namespace ARMForge.Web.Api.Controllers
         private readonly IOrderService _orderService = orderService;
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
+        public async Task<ActionResult<IEnumerable<OrderDto>>> GetAllOrders()
         {
             var orders = await _orderService.GetAllOrdersAsync();
             return Ok(orders);
@@ -31,9 +31,9 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Order>> AddOrder(OrderCreateDto orderDto) // Burası değişti!
+        public async Task<ActionResult<Order>> AddOrder(OrderCreateDto orderDto) 
         {
-            var createdOrder = await _orderService.CreateOrder(orderDto); // DTO'yu direk servise gönder
+            var createdOrder = await _orderService.CreateOrder(orderDto);
             return CreatedAtAction(nameof(GetOrder), new { id = createdOrder.Id }, createdOrder);
         }
 

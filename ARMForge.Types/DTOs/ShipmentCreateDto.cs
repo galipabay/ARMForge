@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ARMForge.Types.DTOs
 {
     public class ShipmentCreateDto
-    {   
+    {
         // Gerekli ID’ler
         public int OrderId { get; set; }
         public int DriverId { get; set; }
