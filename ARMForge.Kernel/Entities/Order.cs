@@ -16,14 +16,54 @@ namespace ARMForge.Kernel.Entities
         public DateTimeOffset RequiredDate { get; set; }
         public DateTimeOffset? ShippedDate { get; set; }
 
-        [MaxLength(64)]
-        public string Status { get; set; } = string.Empty;
+        [Required, MaxLength(64)]
+        public string Status { get; set; } = "Pending";
 
+        [Range(0.01, double.MaxValue)]
         public decimal TotalAmount { get; set; }
 
-        [MaxLength(32)]
+        [Required, MaxLength(32)]
         public string OrderNumber { get; set; } = string.Empty;
 
+        [MaxLength(32)]
+        public string? PaymentMethod { get; set; } // "Kredi Kartı", "Havale", "Nakit"
+
+        [MaxLength(32)]
+        public string? PaymentStatus { get; set; } // "Ödenmedi", "Ödendi", "İade"
+
+        public DateTimeOffset? PaymentDate { get; set; }
+
+        [Required, MaxLength(500)]
+        public string DeliveryAddress { get; set; } = string.Empty;
+
+        [Required, MaxLength(100)]
+        public string DeliveryCity { get; set; } = string.Empty;
+
+        [Required, MaxLength(20)]
+        public string DeliveryPostalCode { get; set; } = string.Empty;
+
+        [Required, MaxLength(50)]
+        public string DeliveryCountry { get; set; } = string.Empty;
+
+        [Required, MaxLength(20)]
+        public string Priority { get; set; } = "Normal";
+
+        [MaxLength(500)]
+        public string? SpecialInstructions { get; set; }
+
+        [Range(0, double.MaxValue)]
+        public decimal TotalWeight { get; set; }
+
+        [Range(0, double.MaxValue)]
+        public decimal TotalVolume { get; set; }
+
+        [MaxLength(50)]
+        public string? InternalReference { get; set; }
+
+        public int? SalesPersonId { get; set; }
+        public User? SalesPerson { get; set; }
+
         public ICollection<Shipment> Shipments { get; set; } = [];
-	}
+        public ICollection<OrderItem> OrderItems { get; set; } = [];
+    }
 }

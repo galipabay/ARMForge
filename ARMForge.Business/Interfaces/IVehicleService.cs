@@ -10,11 +10,10 @@ namespace ARMForge.Business.Interfaces
 {
     public interface IVehicleService
     {
-        Task<IEnumerable<Vehicle>> GetAllVehiclesAsync();
-        Task<Vehicle> GetVehicleByIdAsync(int id);
-        //Task<Vehicle> AddVehicleAsync(Vehicle vehicle);
-        Task<Vehicle> UpdateVehicleAsync(Vehicle vehicle);
-        Task<bool> DeleteVehicleAsync(int id);
+        Task<IEnumerable<VehicleDto>> GetAllVehiclesAsync();
+        Task<VehicleDto?> GetVehicleByIdAsync(int id);
         Task<VehicleDto> AddVehicleAsync(VehicleCreateDto vehicleDto);
+        Task<VehicleDto?> UpdateVehicleAsync(int id, VehicleUpdateDto vehicleDto);
+        Task<bool> DeleteVehicleAsync(int id);
     }
 }

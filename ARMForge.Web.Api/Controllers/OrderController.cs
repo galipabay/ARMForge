@@ -23,38 +23,51 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Order>> GetOrder(int id)
+        public async Task<ActionResult<OrderDto>> GetOrder(int id)
         {
             var order = await _orderService.GetOrderByIdAsync(id);
-            if (order == null) return NotFound();
-            return Ok(order);
+            return order == null ? NotFound() : Ok(order);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Order>> AddOrder(OrderCreateDto orderDto) 
+        public async Task<ActionResult<OrderDto>> AddOrder([FromBody] OrderCreateDto orderDto)
         {
-            var createdOrder = await _orderService.CreateOrder(orderDto);
-            return CreatedAtAction(nameof(GetOrder), new { id = createdOrder.Id }, createdOrder);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var createdOrder = await _orderService.AddOrderAsync(orderDto);
+                return CreatedAtAction(nameof(GetOrder), new { id = createdOrder.Id }, createdOrder);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateOrder(int id, [FromBody] Order order)
+        public async Task<ActionResult<OrderDto>> UpdateOrder(int id, [FromBody] OrderUpdateDto orderDto)
         {
-            if (id != order.Id) return BadRequest();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            var updatedOrder = await _orderService.UpdateOrderAsync(order);
-            if (updatedOrder == null) return NotFound();
-
-            return NoContent();
+            try
+            {
+                var updatedOrder = await _orderService.UpdateOrderAsync(id, orderDto);
+                return Ok(updatedOrder);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
             var result = await _orderService.DeleteOrderAsync(id);
-            if (!result) return NotFound();
-
-            return NoContent();
+            return result ? NoContent() : NotFound();
         }
     }
 }

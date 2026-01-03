@@ -65,23 +65,12 @@ namespace ARMForge.Business.Services
             shipment.Status = "Kargoda";
             shipment.TrackingNumber = $"TRK-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
 
-            //var shipment = new Shipment
-            //{
-            //    OrderId = dto.OrderId,
-            //    DriverId = dto.DriverId,
-            //    VehicleId = dto.VehicleId,
-            //    Origin = dto.Origin,
-            //    Destination = dto.Destination,
-            //    DepartureDate = dto.DepartureDate,
-            //    EstimatedDeliveryDate = dto.EstimatedDeliveryDate,
-            //    Status = "Kargoda",
-            //    TrackingNumber = $"TRK-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}"
-            //};
-
             // 5. İlgili varlıkların durumunu günceller.
             driver.IsAvailable = false;
             driver.IsOnDuty = true;
+
             vehicle.IsAvailable = false;
+
             order.Status = "Kargoda";
 
             var driverUpdateDto = new DriverUpdateDto
@@ -94,9 +83,9 @@ namespace ARMForge.Business.Services
             await _shipmentRepository.AddAsync(shipment);
             // Paralel update (daha performanslı)
             await Task.WhenAll(
-                _driverService.UpdateDriverAsync(driver.Id, driverUpdateDto),
-                _vehicleService.UpdateVehicleAsync(vehicle),
-                _orderService.UpdateOrderAsync(order)
+                _driverService.UpdateDriverAsync(driver.Id, driverUpdateDto)
+                //_vehicleService.UpdateVehicleAsync(vehicle),
+                //_orderService.UpdateOrderAsync(order)
             );
 
             // 7. Transaction commit

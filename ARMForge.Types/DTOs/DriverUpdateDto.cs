@@ -1,5 +1,7 @@
-﻿using System;
+﻿using ARMForge.Kernel.Entities;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,8 +11,13 @@ namespace ARMForge.Types.DTOs
 {
     public class DriverUpdateDto
     {
+        [Required]
+        public Driver.DriverLicenseType LicenseType { get; set; }
+
         public bool IsOnDuty { get; set; }
-        public DriverLicenseType LicenseType { get; set; }
-        public bool IsAvailable { get; set; } // yeni alan eklendi
+
+        public DateTime? LastInspectionDate { get; set; }
+
+        public bool IsAvailable { get; set; }
     }
 }

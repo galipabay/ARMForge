@@ -17,6 +17,11 @@ namespace ARMForge.Types.DTOs
         public string Status { get; set; } = string.Empty;
         public decimal TotalAmount { get; set; }
         public string OrderNumber { get; set; } = string.Empty;
+        public string? PaymentMethod { get; set; }
+        public string? PaymentStatus { get; set; }
+        public DateTimeOffset? PaymentDate { get; set; }
+        public string DeliveryAddress { get; set; } = string.Empty;
+        public string DeliveryCity { get; set; } = string.Empty;
 
         // Shipment bilgileri
         public List<ShipmentInfoDto> Shipments { get; set; } = new();

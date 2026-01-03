@@ -63,7 +63,7 @@ namespace ARMForge.Web.Api.Controllers
             {
                 return NotFound(new { error = ex.Message });
             }
-            catch (Exception ex) // ✅ Genel exception ekle
+            catch (Exception ex)
             {
                 return BadRequest(new { error = ex.Message });
             }

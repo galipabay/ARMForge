@@ -1,4 +1,5 @@
 ﻿using ARMForge.Kernel.Entities;
+using ARMForge.Types.DTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +10,10 @@ namespace ARMForge.Business.Interfaces
 {
     public interface IProductService
     {
-        Task<IEnumerable<Product>> GetAllProductsAsync();
-        Task<Product> GetProductByIdAsync(int id);
-        Task<Product> AddProductAsync(Product product);
-        Task<Product> UpdateProductAsync(Product product);
+        Task<IEnumerable<ProductDto>> GetAllProductsAsync();
+        Task<ProductDto?> GetProductByIdAsync(int id);
+        Task<ProductDto> AddProductAsync(ProductCreateDto productDto);
+        Task<ProductDto?> UpdateProductAsync(int id, ProductUpdateDto productDto);
         Task<bool> DeleteProductAsync(int id);
     }
 }

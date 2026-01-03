@@ -10,23 +10,12 @@ namespace ARMForge.Types.DTOs
     public class ProductDto
     {
         public int Id { get; set; }
-
-        [Required, MaxLength(128)]
-        public string Name {  get; set; } = string.Empty;
-
-        [MaxLength(64)]
+        public string Name { get; set; } = string.Empty;
         public string? StockKeepingUnit { get; set; }
-
-        [MaxLength(1000)]
         public string? Description { get; set; }
-
-        [Range(0, double.MaxValue)]
         public decimal UnitPrice { get; set; }
-
-        [Range(0, int.MaxValue)]
         public int StockQuantity { get; set; }
-
-        [MaxLength(64)]
         public string? Category { get; set; }
+        public int OrderItemCount { get; set; } // ✅ Ekstra: Kaç siparişte kullanıldı?
     }
 }

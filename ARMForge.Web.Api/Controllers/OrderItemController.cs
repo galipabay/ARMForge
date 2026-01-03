@@ -1,12 +1,13 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Kernel.Entities;
+using ARMForge.Types.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ARMForge.Web.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/orders/{orderId:int}/items")]
     [ApiController]
     [Authorize]
     public class OrderItemController : ControllerBase
@@ -18,44 +19,63 @@ namespace ARMForge.Web.Api.Controllers
             _orderItemService = orderItemService;
         }
 
+        // 📌 GET: api/orders/{orderId}/items
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<OrderItem>>> GetOrderItems()
+        public async Task<IActionResult> GetAllOrderItems(int orderId)
         {
-            var orderItems = await _orderItemService.GetAllOrderItemsAsync();
-            return Ok(orderItems);
+            var items = await _orderItemService.GetOrderItemsByOrderIdAsync(orderId);
+            return Ok(items);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<OrderItem>> GetOrderItem(int id)
+        // 📌 GET: api/orders/{orderId}/items/{id}
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetOrderItemById(int orderId, int id)
         {
-            var orderItem = await _orderItemService.GetOrderItemByIdAsync(id);
-            if (orderItem == null) return NotFound();
-            return Ok(orderItem);
+            var item = await _orderItemService.GetOrderItemByIdAsync(id);
+
+            if (item == null || item.OrderId != orderId)
+                return NotFound();
+
+            return Ok(item);
         }
 
+        // 📌 POST: api/orders/{orderId}/items
         [HttpPost]
-        public async Task<ActionResult<OrderItem>> AddOrderItem([FromBody] OrderItem orderItem)
+        public async Task<IActionResult> AddOrderItem(
+            int orderId,
+            [FromBody] OrderItemCreateDto dto)
         {
-            var addedOrderItem = await _orderItemService.AddOrderItemAsync(orderItem);
-            return CreatedAtAction(nameof(GetOrderItem), new { id = addedOrderItem.Id }, addedOrderItem);
+            var createdItem = await _orderItemService.AddOrderItemAsync(orderId, dto);
+
+            return CreatedAtAction(
+                nameof(GetOrderItemById),
+                new { orderId, id = createdItem.Id },
+                createdItem);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateOrderItem(int id, [FromBody] OrderItem orderItem)
+        // 📌 PUT: api/orders/{orderId}/items/{id}
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> UpdateOrderItem(
+            int orderId,
+            int id,
+            [FromBody] OrderItemUpdateDto dto)
         {
-            if (id != orderItem.Id) return BadRequest();
+            var updatedItem = await _orderItemService.UpdateOrderItemAsync(id, dto);
 
-            var updatedOrderItem = await _orderItemService.UpdateOrderItemAsync(orderItem);
-            if (updatedOrderItem == null) return NotFound();
+            if (updatedItem == null || updatedItem.OrderId != orderId)
+                return NotFound();
 
-            return NoContent();
+            return Ok(updatedItem);
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteOrderItem(int id)
+        // 📌 DELETE: api/orders/{orderId}/items/{id}
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> DeleteOrderItem(int orderId, int id)
         {
-            var result = await _orderItemService.DeleteOrderItemAsync(id);
-            if (!result) return NotFound();
+            var deleted = await _orderItemService.DeleteOrderItemAsync(id);
+
+            if (!deleted)
+                return NotFound();
 
             return NoContent();
         }

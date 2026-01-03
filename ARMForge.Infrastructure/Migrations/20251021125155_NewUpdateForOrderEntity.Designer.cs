@@ -3,6 +3,7 @@ using System;
 using ARMForge.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ARMForge.Infrastructure.Migrations
 {
     [DbContext(typeof(ARMForgeDbContext))]
-    partial class ARMForgeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251021125155_NewUpdateForOrderEntity")]
+    partial class NewUpdateForOrderEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -271,13 +274,7 @@ namespace ARMForge.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BatchNumber")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("ExpiryDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
@@ -292,10 +289,6 @@ namespace ARMForge.Infrastructure.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
-                    b.Property<string>("StorageLocation")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("numeric");
 
@@ -304,12 +297,6 @@ namespace ARMForge.Infrastructure.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("Volume")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("Weight")
-                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -376,20 +363,8 @@ namespace ARMForge.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("DeliveryAddress")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("DeliveryCity")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
                     b.Property<DateTimeOffset?>("ExpectedDeliveryDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Incoterms")
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -406,12 +381,6 @@ namespace ARMForge.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal?>("TotalVolume")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal?>("TotalWeight")
                         .HasColumnType("numeric");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -432,14 +401,7 @@ namespace ARMForge.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("BatchNumber")
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("ExpiryDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsActive")
@@ -462,12 +424,6 @@ namespace ARMForge.Infrastructure.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal?>("Volume")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal?>("Weight")
-                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -825,7 +781,7 @@ namespace ARMForge.Infrastructure.Migrations
             modelBuilder.Entity("ARMForge.Kernel.Entities.OrderItem", b =>
                 {
                     b.HasOne("ARMForge.Kernel.Entities.Order", "Order")
-                        .WithMany("OrderItems")
+                        .WithMany()
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -936,8 +892,6 @@ namespace ARMForge.Infrastructure.Migrations
 
             modelBuilder.Entity("ARMForge.Kernel.Entities.Order", b =>
                 {
-                    b.Navigation("OrderItems");
-
                     b.Navigation("Shipments");
                 });
 

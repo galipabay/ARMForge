@@ -15,55 +15,60 @@ namespace ARMForge.Web.Api.Controllers
         {
             _vehicleService = vehicleService;
         }
+
         [HttpGet]
-        public async Task<IActionResult> GetAllVehicles()
+        public async Task<ActionResult<IEnumerable<VehicleDto>>> GetAllVehicles()
         {
             var vehicles = await _vehicleService.GetAllVehiclesAsync();
             return Ok(vehicles);
         }
+
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetVehicleById(int id)
+        public async Task<ActionResult<VehicleDto>> GetVehicleById(int id)
         {
             var vehicle = await _vehicleService.GetVehicleByIdAsync(id);
-            if (vehicle == null)
-            {
-                return NotFound();
-            }
-            return Ok(vehicle);
+            return vehicle == null ? NotFound() : Ok(vehicle);
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddVehicle([FromBody] VehicleCreateDto vehicleDto)
+        public async Task<ActionResult<VehicleDto>> AddVehicle([FromBody] VehicleCreateDto vehicleDto) // ✅ FIXED
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var addedVehicle = await _vehicleService.AddVehicleAsync(vehicleDto);
-            return CreatedAtAction(nameof(GetVehicleById), new { id = addedVehicle.Id }, addedVehicle);
+
+            try
+            {
+                var addedVehicle = await _vehicleService.AddVehicleAsync(vehicleDto);
+                return CreatedAtAction(nameof(GetVehicleById), new { id = addedVehicle.Id }, addedVehicle);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateVehicle(int id, [FromBody] Vehicle vehicle)
+        public async Task<ActionResult<VehicleDto>> UpdateVehicle(int id, [FromBody] VehicleUpdateDto vehicleDto)
         {
-            if (id != vehicle.Id || !ModelState.IsValid)
-            {
+            if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            }
-            var updatedVehicle = await _vehicleService.UpdateVehicleAsync(vehicle);
-            if (updatedVehicle == null)
+
+            try
             {
-                return NotFound();
+                var updatedVehicle = await _vehicleService.UpdateVehicleAsync(id, vehicleDto);
+                return Ok(updatedVehicle);
             }
-            return Ok(updatedVehicle);
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
         }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteVehicle(int id)
         {
             var result = await _vehicleService.DeleteVehicleAsync(id);
-            if (!result)
-            {
-                return NotFound();
-            }
-            return NoContent();
+            return result ? NoContent() : NotFound();
         }
     }
 }

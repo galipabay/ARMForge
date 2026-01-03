@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -19,14 +20,24 @@ namespace ARMForge.Kernel.Entities
         public string? Description { get; set; }
 
         [Range(0, double.MaxValue)]
+        [Precision(18, 4)]
+        public decimal UnitWeight { get; set; } // kg
+
+        [Range(0, double.MaxValue)]
+        [Precision(18, 6)]
+        public decimal UnitVolume { get; set; } // m³
+
+        [Range(0, double.MaxValue)]
+        [Precision(18, 4)]
         public decimal UnitPrice { get; set; }
 
         [Range(0, int.MaxValue)]
         public int StockQuantity { get; set; }
+
         [MaxLength(64)]
         public string? Category { get; set; }
 
         // OrderItem ilişkisi
-        public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        public ICollection<OrderItem> OrderItems { get; set; } = [];
     }
 }

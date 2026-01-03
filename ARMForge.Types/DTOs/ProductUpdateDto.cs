@@ -7,12 +7,10 @@ using System.Threading.Tasks;
 
 namespace ARMForge.Types.DTOs
 {
-    public class ProductUpdateDto
+   public class ProductUpdateDto
     {
-        public int Id { get; set; }
-
-        [Required, MaxLength(128)]
-        public string Name { get; set; } = string.Empty;
+        [MaxLength(128)]
+        public string? Name { get; set; }
 
         [MaxLength(64)]
         public string? StockKeepingUnit { get; set; }
@@ -20,11 +18,11 @@ namespace ARMForge.Types.DTOs
         [MaxLength(1000)]
         public string? Description { get; set; }
 
-        [Range(0, double.MaxValue)]
-        public decimal UnitPrice { get; set; }
+        [Range(typeof(decimal), "0", "79228162514264337593543950335")]
+        public decimal? UnitPrice { get; set; }
 
         [Range(0, int.MaxValue)]
-        public int StockQuantity { get; set; }
+        public int? StockQuantity { get; set; }
 
         [MaxLength(64)]
         public string? Category { get; set; }

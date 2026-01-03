@@ -18,16 +18,34 @@ namespace ARMForge.Types.DTOs
         [Required(ErrorMessage = "Gerekli teslim tarihi zorunludur.")]
         public DateTimeOffset RequiredDate { get; set; }
 
-        public DateTimeOffset? ShippedDate { get; set; } // Opsiyonel olabilir
+        public DateTimeOffset? ShippedDate { get; set; }
 
         [MaxLength(64, ErrorMessage = "Durum alanı en fazla 64 karakter olabilir.")]
-        public string Status { get; set; } = "Pending"; // Varsayılan değer
+        public string Status { get; set; } = "Pending";
 
         [Required(ErrorMessage = "Toplam tutar zorunludur.")]
         [Range(0.01, double.MaxValue, ErrorMessage = "Toplam tutar 0'dan büyük olmalıdır.")]
         public decimal TotalAmount { get; set; }
 
-        // Sevkiyat bilgileri burada olmaz, ayrı bir endpoint'te yönetilir
-        // public ICollection<Shipment> Shipments { get; set; }
+        // ✅ ORDER NUMBER EKLE
+        [Required(ErrorMessage = "Sipariş numarası zorunludur.")]
+        [MaxLength(32, ErrorMessage = "Sipariş numarası en fazla 32 karakter olabilir.")]
+        public string OrderNumber { get; set; } = string.Empty;
+
+        [MaxLength(32)]
+        public string? PaymentMethod { get; set; }
+
+        [MaxLength(32)]
+        public string? PaymentStatus { get; set; }
+
+        public DateTimeOffset? PaymentDate { get; set; }
+
+        [Required, MaxLength(500)]
+        public string DeliveryAddress { get; set; } = string.Empty;
+
+        [Required, MaxLength(100)]
+        public string DeliveryCity { get; set; } = string.Empty;
+
+        public List<OrderItemCreateDto> OrderItems { get; set; } = new();
     }
 }

@@ -1,9 +1,6 @@
 ﻿using ARMForge.Business.Interfaces;
-using ARMForge.Kernel.Entities;
 using ARMForge.Types.DTOs;
-using ARMForge.Types.Mapping;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ARMForge.Web.Api.Controllers
@@ -21,10 +18,9 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<ProductDto>>> GetAllProducts()
         {
             var products = await _productService.GetAllProductsAsync();
-            var productDtos = products.Select(p => ProductMapper.ToDto(p));
             return Ok(products);
         }
 
@@ -32,40 +28,48 @@ namespace ARMForge.Web.Api.Controllers
         public async Task<ActionResult<ProductDto>> GetProduct(int id)
         {
             var product = await _productService.GetProductByIdAsync(id);
-            if (product == null) return NotFound();
-            return Ok(ProductMapper.ToDto(product));
+            return product == null ? NotFound() : Ok(product);
         }
 
         [HttpPost]
         public async Task<ActionResult<ProductDto>> AddProduct([FromBody] ProductCreateDto productDto)
         {
-            var product = ProductMapper.ToEntity(productDto);
-            var addedProduct = await _productService.AddProductAsync(product);
-            return CreatedAtAction(nameof(GetProduct), new { id = addedProduct.Id }, ProductMapper.ToDto(addedProduct));
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var addedProduct = await _productService.AddProductAsync(productDto);
+                return CreatedAtAction(nameof(GetProduct), new { id = addedProduct.Id }, addedProduct);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductUpdateDto productDto)
+        public async Task<ActionResult<ProductDto>> UpdateProduct(int id, [FromBody] ProductUpdateDto productDto)
         {
-            if (id != productDto.Id) return BadRequest();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            var existingProduct = await _productService.GetProductByIdAsync(id);
-            if (existingProduct == null) return NotFound();
-
-            ProductMapper.ToEntity(productDto, existingProduct);
-            var updatedProduct = await _productService.UpdateProductAsync(existingProduct);
-            if (updatedProduct == null) return NotFound();
-
-            return NoContent();
+            try
+            {
+                var updatedProduct = await _productService.UpdateProductAsync(id, productDto);
+                return Ok(updatedProduct);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var result = await _productService.DeleteProductAsync(id);
-            if (!result) return NotFound();
-
-            return NoContent();
+            return result ? NoContent() : NotFound();
         }
     }
 }

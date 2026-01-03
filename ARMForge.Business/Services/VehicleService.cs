@@ -13,19 +13,41 @@ using System.Threading.Tasks;
 
 namespace ARMForge.Business.Services
 {
-    public class VehicleService : IVehicleService
+    public class VehicleService(IGenericRepository<Vehicle> vehicleRepository, IMapper mapper, IUnitOfWork unitOfWork, ICurrentUserService currentUserService) : IVehicleService
     {
-        private readonly IGenericRepository<Vehicle> _vehicleRepository;
-        private readonly IMapper _mapper;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IGenericRepository<Vehicle> _vehicleRepository = vehicleRepository;
+        private readonly IMapper _mapper = mapper;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+        private readonly ICurrentUserService _currentUserService = currentUserService;
 
-        // Constructor ile IGenericRepository'yi DI (Dependency Injection) ile al
-        public VehicleService(IGenericRepository<Vehicle> vehicleRepository, IMapper mapper, IUnitOfWork unitOfWork)
+        #region GetAllVehicles
+        public async Task<IEnumerable<VehicleDto>> GetAllVehiclesAsync() // ✅ DTO
         {
-            _vehicleRepository = vehicleRepository;
-            _mapper = mapper;
-            _unitOfWork = unitOfWork;
+            var vehicles = await _vehicleRepository.GetAllWithIncludesAsync(v => v.Shipments);
+
+            // ✅ CurrentUserService ile filtrele
+            if (!_currentUserService.IsAdmin)
+            {
+                vehicles = vehicles.Where(v => v.IsActive).ToList();
+            }
+
+            return _mapper.Map<IEnumerable<VehicleDto>>(vehicles);
         }
+        #endregion
+
+        #region GetVehicle
+        public async Task<VehicleDto?> GetVehicleByIdAsync(int id) // ✅ DTO + NULLABLE
+        {
+            var vehicle = await _vehicleRepository.GetByConditionAsync(
+                v => v.Id == id && (_currentUserService.IsAdmin || v.IsActive),
+                include: q => q.Include(v => v.Shipments)
+            );
+
+            return vehicle == null ? null : _mapper.Map<VehicleDto>(vehicle);
+        } 
+        #endregion
+
+        #region AddVehicle
         public async Task<VehicleDto> AddVehicleAsync(VehicleCreateDto vehicleDto)
         {
             var exists = await _vehicleRepository.FindAsync(v => v.PlateNumber == vehicleDto.PlateNumber);
@@ -33,56 +55,52 @@ namespace ARMForge.Business.Services
                 throw new InvalidOperationException("Bu plaka numarasına sahip bir araç zaten mevcut.");
 
             var vehicle = _mapper.Map<Vehicle>(vehicleDto);
-
             await _vehicleRepository.AddAsync(vehicle);
             await _unitOfWork.CommitAsync();
-
             return _mapper.Map<VehicleDto>(vehicle);
         }
+        #endregion
 
-        //public async Task<Vehicle> AddVehicleAsync(Vehicle vehicle)
-        //{
-        //    // İş mantığı buraya gelir. Örn: Plaka numarasının benzersiz olduğunu kontrol etme.
-        //    var existingVehicle = await _vehicleRepository.FindAsync(v => v.PlateNumber == vehicle.PlateNumber);
-        //    if (existingVehicle.Any())
-        //    {
-        //        // İş kuralı ihlali, hata döndür
-        //        throw new InvalidOperationException("Bu plaka numarasına sahip bir araç zaten mevcut.");
-        //    }
-
-        //    await _vehicleRepository.AddAsync(vehicle);
-        //    await _vehicleRepository.SaveChangesAsync();
-        //    return vehicle; // Eklenen aracı döndür
-        //}
-
-        public async Task<bool> DeleteVehicleAsync(int id)
+        #region UpdateVehicle
+        public async Task<VehicleDto?> UpdateVehicleAsync(int id, VehicleUpdateDto vehicleDto) // ✅ DTO + ID PARAMETRE
         {
-            var vehicleToDelete = await _vehicleRepository.GetByIdAsync(id);
-            if (vehicleToDelete == null)
+            var vehicle = await _vehicleRepository.GetByConditionAsync(v => v.Id == id);
+            if (vehicle == null)
+                return null;
+
+            // ✅ PlateNumber unique kontrolü (eğer değiştiyse)
+            if (vehicleDto.PlateNumber != null && vehicleDto.PlateNumber != vehicle.PlateNumber)
             {
-                return false; // Silinecek araç bulunamadı
+                var exists = await _vehicleRepository.FindAsync(v => v.PlateNumber == vehicleDto.PlateNumber);
+                if (exists.Any())
+                    throw new InvalidOperationException("Bu plaka numarasına sahip bir araç zaten mevcut.");
             }
 
-            _vehicleRepository.Delete(vehicleToDelete);
-            return await _vehicleRepository.SaveChangesAsync() > 0;
-        }
+            // ✅ Conditional update
+            _mapper.Map(vehicleDto, vehicle);
+            vehicle.UpdatedAt = DateTime.UtcNow;
 
-        public async Task<IEnumerable<Vehicle>> GetAllVehiclesAsync()
-        {
-            return await _vehicleRepository.GetAllAsync();
-        }
-
-        public async Task<Vehicle> GetVehicleByIdAsync(int id)
-        {
-            return await _vehicleRepository.GetByIdAsync(id);
-        }
-
-        public async Task<Vehicle> UpdateVehicleAsync(Vehicle vehicle)
-        {
-            // İş mantığı buraya gelir. Örn: Güncelleme kuralları.
             _vehicleRepository.Update(vehicle);
-            await _vehicleRepository.SaveChangesAsync();
-            return vehicle;
+            await _unitOfWork.CommitAsync();
+            return _mapper.Map<VehicleDto>(vehicle);
         }
+        #endregion
+
+        #region DeleteVehicle
+        public async Task<bool> DeleteVehicleAsync(int id)
+        {
+            var vehicle = await _vehicleRepository.GetByConditionAsync(v => v.Id == id && v.IsActive);
+            if (vehicle == null)
+                return false;
+
+            // ✅ SOFT DELETE
+            vehicle.IsActive = false;
+            vehicle.UpdatedAt = DateTime.UtcNow;
+
+            _vehicleRepository.Update(vehicle);
+            await _unitOfWork.CommitAsync();
+            return true;
+        } 
+        #endregion
     }
 }

@@ -29,7 +29,7 @@ namespace ARMForge.Web.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Driver>>> GetAllDrivers()
+        public async Task<ActionResult<IEnumerable<DriverDto>>> GetAllDrivers()
         {
             var drivers = await _driverService.GetAllDriversAsync();
             return Ok(drivers);
@@ -46,32 +46,44 @@ namespace ARMForge.Web.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<DriverDto>> AddDriver([FromBody] DriverCreateDto driverDto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // ✅ User check'i ModelState ile birleştir
             var userId_check = await _userService.CheckUserById(driverDto.UserId);
-            if (userId_check == false)
+            if (!userId_check)
             {
                 ModelState.AddModelError("UserId", "The specified UserId does not exist.");
                 return BadRequest(ModelState);
             }
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            try
+            {
+                var addedDriver = await _driverService.AddDriverAsync(driverDto);
+                return CreatedAtAction(nameof(GetDriver), new { id = addedDriver.Id }, addedDriver);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
 
-            var addedDriver = await _driverService.CreateDriverAsync(driverDto);
-            return CreatedAtAction(nameof(GetDriver), new { id = addedDriver.Id }, addedDriver);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateDriver(int id, [FromBody] DriverUpdateDto driverUpdateDto)
+        public async Task<ActionResult<DriverDto>> UpdateDriver(int id, [FromBody] DriverUpdateDto driverUpdateDto) // ✅ DTO
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var updatedDriver = await _driverService.UpdateDriverAsync(id, driverUpdateDto);
-
-            if (updatedDriver == null)
-                return NotFound();
-
-            return Ok(updatedDriver);
+            try
+            {
+                var updatedDriver = await _driverService.UpdateDriverAsync(id, driverUpdateDto);
+                return Ok(updatedDriver);
+            }
+            catch (InvalidOperationException ex) // ✅ Exception handling
+            {
+                return NotFound(new { error = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]

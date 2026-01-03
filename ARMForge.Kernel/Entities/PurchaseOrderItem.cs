@@ -22,6 +22,17 @@ namespace ARMForge.Kernel.Entities
         [Range(0, double.MaxValue)]
         public decimal Subtotal { get; set; }
 
+        [Range(0, double.MaxValue)]
+        public decimal? Weight { get; set; } // Birim ağırlık
+
+        [Range(0, double.MaxValue)]
+        public decimal? Volume { get; set; } // Birim hacim
+
+        [MaxLength(64)]
+        public string? BatchNumber { get; set; } // Parti numarası
+
+        public DateTime? ExpiryDate { get; set; } // SKT
+
         // Gezinti Özellikleri (Navigation Properties)
         public PurchaseOrder PurchaseOrder { get; set; } = null!;
         public Product Product { get; set; } = null!;

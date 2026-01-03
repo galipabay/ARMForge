@@ -19,15 +19,17 @@ namespace ARMForge.Business.Services
         private readonly IGenericRepository<Driver> _driverRepository;
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUserService _currentUserService;
 
-        public DriverService(IGenericRepository<Driver> driverRepository,IMapper mapper,IUnitOfWork unitOfWork)
+        public DriverService(IGenericRepository<Driver> driverRepository,IMapper mapper,IUnitOfWork unitOfWork,ICurrentUserService currentUserService)
         {
             _driverRepository = driverRepository;
             _mapper = mapper;
             _unitOfWork = unitOfWork;
+            _currentUserService = currentUserService;
         }
 
-        public async Task<DriverDto> CreateDriverAsync(DriverCreateDto driverDto)
+        public async Task<DriverDto> AddDriverAsync(DriverCreateDto driverDto)
         {
             var driver = _mapper.Map<Driver>(driverDto);
 
@@ -39,41 +41,38 @@ namespace ARMForge.Business.Services
 
         public async Task<bool> DeleteDriverAsync(int id)
         {
-            var driverToDelete = await _driverRepository.GetByIdAsync(id);
-            if (driverToDelete == null)
-            {
-                return false; // Silinecek sürücü bulunamadı
-            }
-            _driverRepository.Delete(driverToDelete);
-            return await _driverRepository.SaveChangesAsync() > 0;
+            var driver = await _driverRepository.GetByConditionAsync(d => d.Id == id && d.IsActive);
+            if (driver == null)
+                return false;
+
+            // ✅ SOFT DELETE
+            driver.IsActive = false;
+            driver.UpdatedAt = DateTime.UtcNow;
+
+            _driverRepository.Update(driver); // ✅ UPDATE çağır
+            await _unitOfWork.CommitAsync(); // ✅ UnitOfWork kullan
+            return true;
         }
         public async Task<IEnumerable<DriverDto>> GetAllDriversAsync()
         {
             // 1️⃣ EF Core'dan User navigation property ile birlikte driverları al
             var drivers = await _driverRepository.GetAllWithIncludesAsync(d => d.User);
 
-            // 2️⃣ AutoMapper ile DTO'ya çevir
-            var driverDtos = _mapper.Map<IEnumerable<DriverDto>>(drivers);
-
-            // 3️⃣ DTO listesi dön
-            return driverDtos;
+            if (!_currentUserService.IsAdmin)
+            {
+                drivers = drivers.Where(d => d.IsActive).ToList();
+            }
+            return _mapper.Map<IEnumerable<DriverDto>>(drivers);
         }
 
         public async Task<DriverDto?> GetDriverByIdAsync(int id)
         {
-            // 1️⃣ Driver'ı User navigation property ile al
             var driver = await _driverRepository.GetByConditionAsync(
-                d => d.Id == id,
+                d => d.Id == id && (_currentUserService.IsAdmin || d.IsActive),
                 include: q => q.Include(d => d.User)
             );
 
-            if (driver == null)
-                return null;
-
-            // 2️⃣ Entity → DTO mapping (AutoMapper veya manuel)
-            var driverDto = _mapper.Map<DriverDto>(driver);
-
-            return driverDto;
+            return driver == null ? null : _mapper.Map<DriverDto>(driver);
         }
 
         public async Task<DriverDto?> UpdateDriverAsync(int id, DriverUpdateDto dto)
@@ -82,17 +81,12 @@ namespace ARMForge.Business.Services
             if (driver == null)
                 return null;
 
-            // Alanları güncelle
-            driver.IsOnDuty = dto.IsOnDuty;
-            driver.LicenseType = dto.LicenseType;
-            driver.IsAvailable = dto.IsAvailable;
-
-            // UpdatedAt güncelle
+            _mapper.Map(dto, driver);
             driver.UpdatedAt = DateTime.UtcNow;
 
             _driverRepository.Update(driver);
             await _unitOfWork.CommitAsync();
-            // DTO’ya map et
+
             return _mapper.Map<DriverDto>(driver);
         }
     }

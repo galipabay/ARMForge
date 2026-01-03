@@ -3,10 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ARMForge.Infrastructure
 {
-    public class ARMForgeDbContext : DbContext
+    public class ARMForgeDbContext(DbContextOptions<ARMForgeDbContext> options) : DbContext(options)
     {
-        public ARMForgeDbContext(DbContextOptions<ARMForgeDbContext> options) : base(options) { }
-
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Customer> Customers { get; set; }
@@ -51,22 +49,41 @@ namespace ARMForge.Infrastructure
             modelBuilder.Entity<Shipment>()
                 .HasOne(s => s.Driver)
                 .WithMany(d => d.Shipments)
-                .HasForeignKey(s => s.DriverId);
+                .HasForeignKey(s => s.DriverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Vehicle - Shipment ilişkisi
             // Bir aracın birden fazla sevkiyatı olabilir, bir sevkiyatın bir aracı olur.
             modelBuilder.Entity<Shipment>()
                 .HasOne(s => s.Vehicle)
                 .WithMany(v => v.Shipments)
-                .HasForeignKey(s => s.VehicleId);
+                .HasForeignKey(s => s.VehicleId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Order - Shipment ilişkisi
-            // Bir siparişin en fazla bir sevkiyatı olabilir (isteğe bağlı), bir sevkiyatın bir siparişi olur.
+            // Bir sipariş birden fazla sevkiyata bölünebilir (partial shipment)
             modelBuilder.Entity<Shipment>()
                 .HasOne(s => s.Order)
                 .WithMany(o => o.Shipments)
-                .HasForeignKey(s => s.OrderId);
+                .HasForeignKey(s => s.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Product>()
+                .HasIndex(p => p.StockKeepingUnit)
+                .IsUnique();
+
+            modelBuilder.Entity<OrderItem>()
+                .HasIndex(oi => new { oi.OrderId, oi.ProductId })
+                .IsUnique();
+
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.Order)
+                .WithMany(o => o.OrderItems)
+                .HasForeignKey(oi => oi.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
-        
+
+        // TODO: PROD ÖNCESİ KALDIRILACAK – Connection string DI'a taşınacak
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseNpgsql("Host=localhost;Database=ARMForgeDb;Username=postgres;Password=12345");
