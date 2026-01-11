@@ -1,51 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using ARMForge.Kernel.Enums;
+using ARMForge.Types.DTOs;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ARMForge.Types.DTOs
+namespace ARMForge.Types.DTOs;
+public class OrderCreateDto
 {
-    public class OrderCreateDto
-    {
-        [Required(ErrorMessage = "Müşteri ID'si zorunludur.")]
-        public int CustomerId { get; set; }
+    [Required]
+    public int CustomerId { get; set; }
 
-        [Required(ErrorMessage = "Sipariş tarihi zorunludur.")]
-        public DateTimeOffset OrderDate { get; set; }
+    [Required]
+    public DateTimeOffset RequiredDate { get; set; }
 
-        [Required(ErrorMessage = "Gerekli teslim tarihi zorunludur.")]
-        public DateTimeOffset RequiredDate { get; set; }
+    [Required, MaxLength(32)]
+    public string OrderNumber { get; set; } = string.Empty;
 
-        public DateTimeOffset? ShippedDate { get; set; }
+    [Required, MaxLength(500)]
+    public string DeliveryAddress { get; set; } = string.Empty;
 
-        [MaxLength(64, ErrorMessage = "Durum alanı en fazla 64 karakter olabilir.")]
-        public string Status { get; set; } = "Pending";
+    [Required, MaxLength(100)]
+    public string DeliveryCity { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Toplam tutar zorunludur.")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "Toplam tutar 0'dan büyük olmalıdır.")]
-        public decimal TotalAmount { get; set; }
+    [Required, MaxLength(20)]
+    public string DeliveryPostalCode { get; set; } = string.Empty;
 
-        // ✅ ORDER NUMBER EKLE
-        [Required(ErrorMessage = "Sipariş numarası zorunludur.")]
-        [MaxLength(32, ErrorMessage = "Sipariş numarası en fazla 32 karakter olabilir.")]
-        public string OrderNumber { get; set; } = string.Empty;
+    [Required, MaxLength(50)]
+    public string DeliveryCountry { get; set; } = string.Empty;
 
-        [MaxLength(32)]
-        public string? PaymentMethod { get; set; }
+    public OrderPriority Priority { get; set; } = OrderPriority.Medium;
 
-        [MaxLength(32)]
-        public string? PaymentStatus { get; set; }
+    [MaxLength(500)]
+    public string? SpecialInstructions { get; set; }
 
-        public DateTimeOffset? PaymentDate { get; set; }
-
-        [Required, MaxLength(500)]
-        public string DeliveryAddress { get; set; } = string.Empty;
-
-        [Required, MaxLength(100)]
-        public string DeliveryCity { get; set; } = string.Empty;
-
-        public List<OrderItemCreateDto> OrderItems { get; set; } = new();
-    }
+    [Required]
+    public List<OrderItemCreateDto> OrderItems { get; set; } = new();
 }
