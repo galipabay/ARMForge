@@ -1,6 +1,7 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Infrastructure;
 using ARMForge.Kernel.Entities;
+using ARMForge.Kernel.Enums;
 using ARMForge.Kernel.Interfaces.GenericRepository;
 using ARMForge.Kernel.Interfaces.UnitOfWork;
 using ARMForge.Types.DTOs;
@@ -19,17 +20,17 @@ namespace ARMForge.Business.Services
         private readonly IOrderService _orderService;
         private readonly IDriverService _driverService;
         private readonly IVehicleService _vehicleService;
-        private readonly IGenericRepository<Shipment> _shipmentRepository; // YENİ: İlişkileri kolayca yönetmek için eklendi
-        private readonly AutoMapper.IMapper _mapper;
+        private readonly IGenericRepository<Shipment> _shipmentRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
         public ShipmentService(
             IOrderService orderService,
             IDriverService driverService,
             IVehicleService vehicleService,
             IGenericRepository<Shipment> shipmentRepository,
-            AutoMapper.IMapper mapper,
-            IUnitOfWork unitOfWork) // YENİ: IGenericRepository<Shipment> eklendi
+            IMapper mapper,
+            IUnitOfWork unitOfWork)
         {
             _orderService = orderService;
             _driverService = driverService;
@@ -39,94 +40,67 @@ namespace ARMForge.Business.Services
             _unitOfWork = unitOfWork;
         }
 
+        // 📌 ADD
         public async Task<ShipmentDto> AddShipmentAsync(ShipmentCreateDto dto)
         {
-            // 1. Gerekli varlıkları veritabanından getirir.
             var order = await _orderService.GetOrderByIdAsync(dto.OrderId);
             var driver = await _driverService.GetDriverByIdAsync(dto.DriverId);
             var vehicle = await _vehicleService.GetVehicleByIdAsync(dto.VehicleId);
 
-            // 2. Kayıtları kontrol et
             if (order == null)
-                throw new InvalidOperationException("Order bulunamadı.");
+                throw new InvalidOperationException("Sipariş bulunamadı.");
             if (driver == null)
-                throw new InvalidOperationException("Driver bulunamadı.");
+                throw new InvalidOperationException("Sürücü bulunamadı.");
             if (vehicle == null)
-                throw new InvalidOperationException("Vehicle bulunamadı.");
+                throw new InvalidOperationException("Araç bulunamadı.");
 
-            // 3. Müsaitlik kontrolü
             if (!driver.IsAvailable)
                 throw new InvalidOperationException("Seçilen sürücü müsait değil.");
             if (!vehicle.IsAvailable)
                 throw new InvalidOperationException("Seçilen araç müsait değil.");
 
-            // 4. Shipment oluştur
             var shipment = _mapper.Map<Shipment>(dto);
-            shipment.Status = "Kargoda";
+            shipment.Status = ShipmentStatus.InTransit; // Enum kullanımı
             shipment.TrackingNumber = $"TRK-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
 
-            // 5. İlgili varlıkların durumunu günceller.
+            // Sürücü ve araç durumları
             driver.IsAvailable = false;
             driver.IsOnDuty = true;
-
             vehicle.IsAvailable = false;
 
-            order.Status = "Kargoda";
+            // Sipariş durumu
+            order.Status = OrderStatus.Shipped;
 
-            var driverUpdateDto = new DriverUpdateDto
-            {
-                IsOnDuty = driver.IsOnDuty,
-                IsAvailable = driver.IsAvailable
-            };
-
-            // 6. Değişiklikleri veritabanına kaydeder.
+            // DB işlemleri
             await _shipmentRepository.AddAsync(shipment);
-            // Paralel update (daha performanslı)
             await Task.WhenAll(
-                _driverService.UpdateDriverAsync(driver.Id, driverUpdateDto)
-                //_vehicleService.UpdateVehicleAsync(vehicle),
-                //_orderService.UpdateOrderAsync(order)
+                _driverService.UpdateDriverAsync(driver.Id, new DriverUpdateDto
+                {
+                    IsAvailable = driver.IsAvailable,
+                    IsOnDuty = driver.IsOnDuty
+                }),
+                _vehicleService.UpdateVehicleAsync(vehicle.Id, new VehicleUpdateDto
+                {
+                    IsAvailable = vehicle.IsAvailable
+                }),
+                _orderService.UpdateOrderAsync(order.Id, new OrderUpdateDto
+                {
+                    Status = order.Status
+                })
             );
 
-            // 7. Transaction commit
             await _unitOfWork.CommitAsync();
 
-            // 8. DTO olarak dön
             return _mapper.Map<ShipmentDto>(shipment);
         }
-        public async Task<bool> DeleteShipmentAsync(int id)
-        {
-            var shipmentToDelete = await _shipmentRepository.GetByIdAsync(id);
-            if (shipmentToDelete == null) return false;
 
-            _shipmentRepository.Delete(shipmentToDelete);
-            return await _shipmentRepository.SaveChangesAsync() > 0;
-        }
-        public async Task<IEnumerable<ShipmentDto>> GetAllShipmentsAsync()
-        {
-            var shipments = await _shipmentRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<ShipmentDto>>(shipments);
-        }
-
-        public async Task<ShipmentDto?> GetShipmentByIdAsync(int id)
-        {
-            var shipment = await _shipmentRepository.GetByConditionAsync(
-                s => s.Id == id,
-                include: q => q
-                    .Include(s => s.Driver)
-                    .Include(s => s.Vehicle)
-                    .Include(s => s.Order)
-            );
-
-            return shipment == null ? null : _mapper.Map<ShipmentDto>(shipment);
-        }
-
+        // 📌 UPDATE
         public async Task<ShipmentDto?> UpdateShipmentAsync(int id, ShipmentUpdateDto dto)
         {
             var shipment = await _shipmentRepository.GetByIdAsync(id);
             if (shipment == null) return null;
 
-            // AutoMapper ile DTO’dan entity’ye güncelle
+            // Partial update mantığı
             _mapper.Map(dto, shipment);
             shipment.UpdatedAt = DateTime.UtcNow;
 
@@ -134,6 +108,68 @@ namespace ARMForge.Business.Services
             await _unitOfWork.CommitAsync();
 
             return _mapper.Map<ShipmentDto>(shipment);
+        }
+
+        // 📌 DELETE
+        public async Task<bool> DeleteShipmentAsync(int id)
+        {
+            var shipment = await _shipmentRepository.GetByIdAsync(id);
+            if (shipment == null) return false;
+
+            // Sürücü ve araç müsait hale gelir
+            var driver = await _driverService.GetDriverByIdAsync(shipment.DriverId);
+            var vehicle = await _vehicleService.GetVehicleByIdAsync(shipment.VehicleId);
+
+            if (driver != null)
+            {
+                driver.IsAvailable = true;
+                driver.IsOnDuty = false;
+                await _driverService.UpdateDriverAsync(driver.Id, new DriverUpdateDto
+                {
+                    IsAvailable = driver.IsAvailable,
+                    IsOnDuty = driver.IsOnDuty
+                });
+            }
+
+            if (vehicle != null)
+            {
+                vehicle.IsAvailable = true;
+                await _vehicleService.UpdateVehicleAsync(vehicle.Id, new VehicleUpdateDto
+                {
+                    IsAvailable = vehicle.IsAvailable
+                });
+            }
+
+            _shipmentRepository.Delete(shipment);
+            await _unitOfWork.CommitAsync();
+
+            return true;
+        }
+
+        // 📌 GET ALL
+        public async Task<IEnumerable<ShipmentDto>> GetAllShipmentsAsync()
+        {
+            var shipments = await _shipmentRepository.GetAllWithIncludesAsync(
+                s => s.Order,
+                s => s.Driver,
+                s => s.Vehicle
+            );
+
+            return _mapper.Map<IEnumerable<ShipmentDto>>(shipments);
+        }
+
+        // 📌 GET BY ID
+        public async Task<ShipmentDto?> GetShipmentByIdAsync(int id)
+        {
+            var shipment = await _shipmentRepository.GetByConditionAsync(
+                s => s.Id == id,
+                include: q => q
+                    .Include(s => s.Order)
+                    .Include(s => s.Driver)
+                    .Include(s => s.Vehicle)
+            );
+
+            return shipment == null ? null : _mapper.Map<ShipmentDto>(shipment);
         }
     }
 }
