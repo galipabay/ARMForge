@@ -1,24 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace ARMForge.Kernel.Entities
 {
     public class User : BaseEntity
     {
-        [MaxLength(64)]
-        public string Firstname { get; set; }
-        [MaxLength(64)]
-        public string Lastname { get; set; }
+        [Required, MaxLength(64)]
+        public string Firstname { get; set; } = null!;
+
+        [Required, MaxLength(64)]
+        public string Lastname { get; set; } = null!;
+
         [JsonIgnore]
         public string PasswordHash { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
         [MaxLength(320)]
-        public string Email { get; set; } = string.Empty;
+        public string Email { get; set; } = null!;
+
         [MaxLength(32)]
         public string? PhoneNumber { get; set; }
         public DateTimeOffset? LastLogin { get; set; }
@@ -27,9 +27,9 @@ namespace ARMForge.Kernel.Entities
         [MaxLength(64)]
         public string? Department { get; set; }
         public int? ManagerId { get; set; }
-        public ICollection<User> DirectReports { get; set; } = new List<User>();
+        public ICollection<User> DirectReports { get; set; } = [];
         public decimal Salary { get; set; }
         // 🔹 Many-to-many ilişki
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public ICollection<UserRole> UserRoles { get; set; } = [];
     }
 }
