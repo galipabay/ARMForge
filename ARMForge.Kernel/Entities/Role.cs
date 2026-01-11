@@ -10,10 +10,11 @@ namespace ARMForge.Kernel.Entities
     public class Role : BaseEntity
     {
         [MaxLength(64)]
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
+
         [MaxLength(500)]
-        public string Description { get; set; }
+        public string Description { get; set; } = null!;
         public bool IsSystemRole { get; set; }
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public ICollection<UserRole> UserRoles { get; set; } = [];
     }
 }
