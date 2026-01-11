@@ -35,5 +35,28 @@ namespace ARMForge.Kernel.Entities
 
         [MaxLength(64)]
         public string? StorageLocation { get; set; } // Depodaki yeri "A-12-3"
+
+        public string? SupplierCode { get; set; }       // opsiyonel
+        public string? SerialNumber { get; set; }       // opsiyonel, batch/lot bazlı takip için
+
+        public void SetTotals(decimal unitPrice, int quantity, decimal weight, decimal volume)
+        {
+            UnitPrice = unitPrice;
+            Quantity = quantity;
+            Subtotal = unitPrice * quantity;
+            Weight = weight * quantity;
+            Volume = volume * quantity;
+        }
+        public void UpdateQuantity(int newQuantity, decimal weight, decimal volume)
+        {
+            if (newQuantity < 0)
+                throw new InvalidOperationException("Quantity cannot be negative.");
+
+            Quantity = newQuantity;
+            Weight = weight * newQuantity;
+            Volume = volume * newQuantity;
+            Subtotal = UnitPrice * newQuantity;
+        }
     }
+
 }
