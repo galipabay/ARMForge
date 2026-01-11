@@ -10,7 +10,7 @@ namespace ARMForge.Business.Interfaces
     public interface IInvoiceService
     {
         Task<IEnumerable<Invoice>> GetAllInvoicesAsync();
-        Task<Invoice> GetInvoiceByIdAsync(int id);
+        Task<Invoice?> GetInvoiceByIdAsync(int id);
         Task<Invoice> AddInvoiceAsync(Invoice invoice);
         Task<Invoice> UpdateInvoiceAsync(Invoice invoice);
         Task<bool> DeleteInvoiceAsync(int id);

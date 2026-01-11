@@ -10,7 +10,7 @@ namespace ARMForge.Business.Interfaces
     public interface IPurchaseOrderService
     {
         Task<IEnumerable<PurchaseOrder>> GetAllPurchaseOrdersAsync();
-        Task<PurchaseOrder> GetPurchaseOrderByIdAsync(int id);
+        Task<PurchaseOrder?> GetPurchaseOrderByIdAsync(int id);
         Task<PurchaseOrder> AddPurchaseOrderAsync(PurchaseOrder purchaseOrder);
         Task<PurchaseOrder> UpdatePurchaseOrderAsync(PurchaseOrder purchaseOrder);
         Task<bool> DeletePurchaseOrderAsync(int id);
