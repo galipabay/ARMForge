@@ -40,15 +40,8 @@ namespace ARMForge.Web.Api.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            try
-            {
-                var shipmentDtoResult = await _shipmentService.AddShipmentAsync(shipmentDto);
-                return CreatedAtAction("GetShipment", new { id = shipmentDtoResult.Id }, shipmentDtoResult);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            var shipmentDtoResult = await _shipmentService.AddShipmentAsync(shipmentDto);
+            return CreatedAtAction("GetShipment", new { id = shipmentDtoResult.Id }, shipmentDtoResult);
         }
 
         [HttpPut("{id}")]
