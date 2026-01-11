@@ -9,15 +9,16 @@ namespace ARMForge.Types.DTOs
 {
     public class OrderItemUpdateDto
     {
-        [Range(1, int.MaxValue, ErrorMessage = "Miktar 1'den büyük olmalıdır.")]
+        [Range(1, int.MaxValue)]
         public int? Quantity { get; set; }
 
-        [MaxLength(64)]
+        [Range(0.01, double.MaxValue)]
+        public decimal? UnitPrice { get; set; }
+
         public string? BatchNumber { get; set; }
-
         public DateTime? ExpiryDate { get; set; }
-
-        [MaxLength(64)]
         public string? StorageLocation { get; set; }
+        public string? SupplierCode { get; set; }
+        public string? SerialNumber { get; set; }
     }
 }
