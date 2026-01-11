@@ -10,7 +10,8 @@ namespace ARMForge.Kernel.Interfaces.GenericRepository
     public interface IGenericRepository<T> where T : BaseEntity
     {
         Task<IEnumerable<T>> GetAllAsync();
-        Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
+        Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate,
+            Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null);
         Task<T?> GetByIdAsync(int id);
         Task AddAsync(T entity);
         void Update(T entity);
