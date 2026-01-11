@@ -28,10 +28,18 @@ namespace ARMForge.Infrastructure
         public async Task<T?> GetByIdAsync(int id) => await _dbSet.FindAsync(id);
         public void Update(T entity) => _dbSet.Update(entity);
 
-        public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+        public async Task<IEnumerable<T>> FindAsync(
+            Expression<Func<T, bool>> predicate,
+            Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null)
         {
-            return await _dbSet.Where(predicate).ToListAsync();
+            IQueryable<T> query = _dbSet;
+
+            if (include != null)
+                query = include(query);
+
+            return await query.Where(predicate).ToListAsync();
         }
+
 
         public async Task<int> SaveChangesAsync()
         {

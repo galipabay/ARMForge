@@ -215,14 +215,11 @@ namespace ARMForge.Infrastructure.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
-                    b.Property<string>("PaymentStatus")
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                    b.Property<int>("PaymentStatus")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("Priority")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("RequiredDate")
                         .HasColumnType("timestamp with time zone");
@@ -237,10 +234,8 @@ namespace ARMForge.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("numeric");
@@ -292,12 +287,18 @@ namespace ARMForge.Infrastructure.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
 
+                    b.Property<string>("SerialNumber")
+                        .HasColumnType("text");
+
                     b.Property<string>("StorageLocation")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("numeric");
+
+                    b.Property<string>("SupplierCode")
+                        .HasColumnType("text");
 
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("numeric");
@@ -313,9 +314,10 @@ namespace ARMForge.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OrderId");
-
                     b.HasIndex("ProductId");
+
+                    b.HasIndex("OrderId", "ProductId")
+                        .IsUnique();
 
                     b.ToTable("OrderItems");
                 });
@@ -355,12 +357,24 @@ namespace ARMForge.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("numeric");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
+                    b.Property<decimal>("UnitVolume")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
+
+                    b.Property<decimal>("UnitWeight")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("StockKeepingUnit")
+                        .IsUnique();
 
                     b.ToTable("Products");
                 });
@@ -531,7 +545,6 @@ namespace ARMForge.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Destination")
-                        .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
@@ -548,14 +561,17 @@ namespace ARMForge.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<string>("Origin")
-                        .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
+                    b.Property<decimal?>("ShippingCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("SpecialInstructions")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<string>("TrackingNumber")
                         .IsRequired()
@@ -567,6 +583,12 @@ namespace ARMForge.Infrastructure.Migrations
 
                     b.Property<int>("VehicleId")
                         .HasColumnType("integer");
+
+                    b.Property<decimal?>("Volume")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("Weight")
+                        .HasColumnType("numeric");
 
                     b.HasKey("Id");
 
@@ -876,19 +898,19 @@ namespace ARMForge.Infrastructure.Migrations
                     b.HasOne("ARMForge.Kernel.Entities.Driver", "Driver")
                         .WithMany("Shipments")
                         .HasForeignKey("DriverId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ARMForge.Kernel.Entities.Order", "Order")
                         .WithMany("Shipments")
                         .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ARMForge.Kernel.Entities.Vehicle", "Vehicle")
                         .WithMany("Shipments")
                         .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Driver");
