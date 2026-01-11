@@ -9,14 +9,9 @@ using System.Threading.Tasks;
 
 namespace ARMForge.Business.Services
 {
-    public class SupplierService : ISupplierService
+    public class SupplierService(IGenericRepository<Supplier> supplierRepository) : ISupplierService
     {
-        private readonly IGenericRepository<Supplier> _supplierRepository;
-
-        public SupplierService(IGenericRepository<Supplier> supplierRepository)
-        {
-            _supplierRepository = supplierRepository;
-        }
+        private readonly IGenericRepository<Supplier> _supplierRepository = supplierRepository;
 
         public async Task<Supplier> AddSupplierAsync(Supplier supplier)
         {
@@ -39,7 +34,7 @@ namespace ARMForge.Business.Services
             return await _supplierRepository.GetAllAsync();
         }
 
-        public async Task<Supplier> GetSupplierByIdAsync(int id)
+        public async Task<Supplier?> GetSupplierByIdAsync(int id)
         {
             return await _supplierRepository.GetByIdAsync(id);
         }

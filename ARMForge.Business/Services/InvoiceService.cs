@@ -9,21 +9,16 @@ using System.Threading.Tasks;
 
 namespace ARMForge.Business.Services
 {
-    public class InvoiceService : IInvoiceService
+    public class InvoiceService(IGenericRepository<Invoice> invoiceRepository) : IInvoiceService
     {
-        private readonly IGenericRepository<Invoice> _invoiceRepository;
-
-        public InvoiceService(IGenericRepository<Invoice> invoiceRepository)
-        {
-            _invoiceRepository = invoiceRepository;
-        }
+        private readonly IGenericRepository<Invoice> _invoiceRepository = invoiceRepository;
 
         public async Task<IEnumerable<Invoice>> GetAllInvoicesAsync()
         {
             return await _invoiceRepository.GetAllAsync();
         }
 
-        public async Task<Invoice> GetInvoiceByIdAsync(int id)
+        public async Task<Invoice?> GetInvoiceByIdAsync(int id)
         {
             return await _invoiceRepository.GetByIdAsync(id);
         }

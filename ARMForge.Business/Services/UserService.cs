@@ -10,21 +10,16 @@ using System.Threading.Tasks;
 
 namespace ARMForge.Business.Services
 {
-    public class UserService : IUserService
+    public class UserService(IGenericRepository<User> userRepository) : IUserService
     {
-        private readonly IGenericRepository<User> _userRepository;
-
-        public UserService(IGenericRepository<User> userRepository)
-        {
-            _userRepository = userRepository;
-        }
+        private readonly IGenericRepository<User> _userRepository = userRepository;
 
         public async Task<IEnumerable<User>> GetAllUsersAsync()
         {
             return await _userRepository.GetAllAsync();
         }
 
-        public async Task<User> GetUserByIdAsync(int id)
+        public async Task<User?> GetUserByIdAsync(int id)
         {
             return await _userRepository.GetByIdAsync(id);
         }

@@ -9,21 +9,16 @@ using System.Threading.Tasks;
 
 namespace ARMForge.Business.Services
 {
-    public class RoleService : IRoleService
+    public class RoleService(IGenericRepository<Role> roleRepository) : IRoleService
     {
-        private readonly IGenericRepository<Role> _roleRepository;
-
-        public RoleService(IGenericRepository<Role> roleRepository)
-        {
-            _roleRepository = roleRepository;
-        }
+        private readonly IGenericRepository<Role> _roleRepository = roleRepository;
 
         public async Task<IEnumerable<Role>> GetAllRolesAsync()
         {
             return await _roleRepository.GetAllAsync();
         }
 
-        public async Task<Role> GetRoleByIdAsync(int id)
+        public async Task<Role?> GetRoleByIdAsync(int id)
         {
             return await _roleRepository.GetByIdAsync(id);
         }

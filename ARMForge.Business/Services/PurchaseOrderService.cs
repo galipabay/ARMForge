@@ -9,14 +9,9 @@ using System.Threading.Tasks;
 
 namespace ARMForge.Business.Services
 {
-    public class PurchaseOrderService : IPurchaseOrderService
+    public class PurchaseOrderService(IGenericRepository<PurchaseOrder> purchaseOrderRepository) : IPurchaseOrderService
     {
-        private readonly IGenericRepository<PurchaseOrder> _purchaseOrderRepository;
-
-        public PurchaseOrderService(IGenericRepository<PurchaseOrder> purchaseOrderRepository)
-        {
-            _purchaseOrderRepository = purchaseOrderRepository;
-        }
+        private readonly IGenericRepository<PurchaseOrder> _purchaseOrderRepository = purchaseOrderRepository;
 
         public async Task<PurchaseOrder> AddPurchaseOrderAsync(PurchaseOrder purchaseOrder)
         {
@@ -39,7 +34,7 @@ namespace ARMForge.Business.Services
             return await _purchaseOrderRepository.GetAllAsync();
         }
 
-        public async Task<PurchaseOrder> GetPurchaseOrderByIdAsync(int id)
+        public async Task<PurchaseOrder?> GetPurchaseOrderByIdAsync(int id)
         {
             return await _purchaseOrderRepository.GetByIdAsync(id);
         }

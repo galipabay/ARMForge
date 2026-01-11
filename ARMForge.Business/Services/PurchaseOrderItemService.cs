@@ -39,10 +39,11 @@ namespace ARMForge.Business.Services
             return await _purchaseOrderItemRepository.GetAllAsync();
         }
 
-        public async Task<PurchaseOrderItem> GetPurchaseOrderItemByIdAsync(int id)
+        public async Task<PurchaseOrderItem?> GetPurchaseOrderItemByIdAsync(int id)
         {
             return await _purchaseOrderItemRepository.GetByIdAsync(id);
         }
+
 
         public async Task<PurchaseOrderItem> UpdatePurchaseOrderItemAsync(PurchaseOrderItem purchaseOrderItem)
         {
