@@ -1,5 +1,5 @@
 ﻿using ARMForge.Business.Interfaces;
-using ARMForge.Kernel.Entities;
+
 using ARMForge.Types.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -10,14 +10,9 @@ namespace ARMForge.Web.Api.Controllers
     [Route("api/orders/{orderId:int}/items")]
     [ApiController]
     [Authorize]
-    public class OrderItemController : ControllerBase
+    public class OrderItemController(IOrderItemService orderItemService) : ControllerBase
     {
-        private readonly IOrderItemService _orderItemService;
-
-        public OrderItemController(IOrderItemService orderItemService)
-        {
-            _orderItemService = orderItemService;
-        }
+        private readonly IOrderItemService _orderItemService = orderItemService;
 
         // 📌 GET: api/orders/{orderId}/items
         [HttpGet]
