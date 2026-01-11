@@ -1,19 +1,17 @@
-﻿using ARMForge.Kernel.Entities;
-using ARMForge.Types.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ARMForge.Types.DTOs;
 
-namespace ARMForge.Business.Interfaces
+public interface IOrderService
 {
-    public interface IOrderService
-    {
-        Task<IEnumerable<OrderDto>> GetAllOrdersAsync();
-        Task<OrderDto?> GetOrderByIdAsync(int id);
-        Task<OrderDto> AddOrderAsync(OrderCreateDto orderDto);
-        Task<OrderDto?> UpdateOrderAsync(int id, OrderUpdateDto orderDto);
-        Task<bool> DeleteOrderAsync(int id);
-    }
+    // Queries
+    Task<IEnumerable<OrderDto>> GetAllOrdersAsync();
+    Task<OrderDto?> GetOrderByIdAsync(int id);
+
+    // Commands
+    Task<OrderDto> AddOrderAsync(OrderCreateDto dto);
+    Task<OrderDto> UpdateOrderAsync(int id, OrderUpdateDto dto);
+    Task<bool> DeleteOrderAsync(int id);
+    Task ConfirmOrderAsync(int id, string paymentMethod);
+    Task CancelOrderAsync(int id);
+    Task ShipOrderAsync(int id);
+    Task MarkOrderAsPaidAsync(int id, string paymentMethod);
 }
