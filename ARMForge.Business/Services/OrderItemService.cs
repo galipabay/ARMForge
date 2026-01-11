@@ -30,8 +30,9 @@ namespace ARMForge.Business.Services
             _mapper = mapper;
         }
 
-        // 📌 GET ALL (opsiyonel)
-        public async Task<IEnumerable<OrderItemDto>> GetAllOrderItemsAsync()
+
+        // 📌 GET ALL
+        public async Task<IEnumerable<OrderItemDto>> GetAllOrderItemsAsync(bool includeInactive = false)
         {
             var items = await _orderItemRepository.GetAllWithIncludesAsync(
                 oi => oi.Product,
@@ -42,7 +43,7 @@ namespace ARMForge.Business.Services
         }
 
         // 📌 GET BY ORDER
-        public async Task<IEnumerable<OrderItemDto>> GetOrderItemsByOrderIdAsync(int orderId)
+        public async Task<IEnumerable<OrderItemDto>> GetOrderItemsByOrderIdAsync(int orderId, bool includeInactive = false)
         {
             var items = await _orderItemRepository.FindAsync(oi => oi.OrderId == orderId);
             return _mapper.Map<IEnumerable<OrderItemDto>>(items);
@@ -61,8 +62,13 @@ namespace ARMForge.Business.Services
             return item == null ? null : _mapper.Map<OrderItemDto>(item);
         }
 
+        // 📌 ADD
         public async Task<OrderItemDto> AddOrderItemAsync(int orderId, OrderItemCreateDto dto)
         {
+            var order = await _orderRepository.GetByIdAsync(orderId);
+            if (order == null)
+                throw new InvalidOperationException("İlgili sipariş bulunamadı.");
+
             var product = await _productRepository.GetByIdAsync(dto.ProductId);
             if (product == null)
                 throw new InvalidOperationException("Ürün bulunamadı.");
@@ -74,22 +80,21 @@ namespace ARMForge.Business.Services
             {
                 OrderId = orderId,
                 ProductId = dto.ProductId,
-
                 Quantity = dto.Quantity,
                 UnitPrice = product.UnitPrice,
                 Subtotal = dto.Quantity * product.UnitPrice,
-
-                // ✅ Lojistik snapshot
                 Weight = product.UnitWeight * dto.Quantity,
                 Volume = product.UnitVolume * dto.Quantity,
-
                 BatchNumber = dto.BatchNumber,
                 ExpiryDate = dto.ExpiryDate,
                 StorageLocation = dto.StorageLocation
             };
 
-            // (Opsiyonel ama önerilir)
+            // stok güncelle
             product.StockQuantity -= dto.Quantity;
+
+            // order totals güncelle
+            order.IncreaseTotals(orderItem.Subtotal, orderItem.Weight, orderItem.Volume);
 
             await _orderItemRepository.AddAsync(orderItem);
             await _unitOfWork.CommitAsync();
@@ -104,28 +109,44 @@ namespace ARMForge.Business.Services
             if (orderItem == null)
                 return null;
 
-            // Quantity değiştiyse subtotal yeniden hesaplanır
+            var product = await _productRepository.GetByIdAsync(orderItem.ProductId);
+            if (product == null)
+                throw new InvalidOperationException("Ürün bulunamadı.");
+
+            var order = await _orderRepository.GetByIdAsync(orderItem.OrderId);
+            if (order == null)
+                throw new InvalidOperationException("Sipariş bulunamadı.");
+
+            // eski totals'ı çıkar
+            order.DecreaseTotals(orderItem.Subtotal, orderItem.Weight, orderItem.Volume);
+
+            // quantity değiştiyse stok güncelle
             if (dto.Quantity.HasValue)
             {
-                if (dto.Quantity.Value <= 0)
-                    throw new InvalidOperationException("Miktar 0'dan büyük olmalıdır.");
+                var quantityDiff = dto.Quantity.Value - orderItem.Quantity;
+                if (quantityDiff > 0 && product.StockQuantity < quantityDiff)
+                    throw new InvalidOperationException("Yetersiz stok.");
 
+                product.StockQuantity -= quantityDiff; // negatifse artı olacak, pozitifse eksi olacak, mantık doğru
+
+
+                product.StockQuantity -= quantityDiff;
                 orderItem.Quantity = dto.Quantity.Value;
                 orderItem.Subtotal = orderItem.Quantity * orderItem.UnitPrice;
+                orderItem.Weight = product.UnitWeight * orderItem.Quantity;
+                orderItem.Volume = product.UnitVolume * orderItem.Quantity;
             }
 
-            // Diğer lojistik alanlar
             if (dto.BatchNumber != null)
                 orderItem.BatchNumber = dto.BatchNumber;
-
             if (dto.ExpiryDate.HasValue)
                 orderItem.ExpiryDate = dto.ExpiryDate;
-
             if (dto.StorageLocation != null)
                 orderItem.StorageLocation = dto.StorageLocation;
 
-            orderItem.UpdatedAt = DateTime.UtcNow;
+            order.IncreaseTotals(orderItem.Subtotal, orderItem.Weight, orderItem.Volume);
 
+            orderItem.UpdatedAt = DateTime.UtcNow;
             _orderItemRepository.Update(orderItem);
             await _unitOfWork.CommitAsync();
 
@@ -135,12 +156,34 @@ namespace ARMForge.Business.Services
         // 📌 DELETE
         public async Task<bool> DeleteOrderItemAsync(int id)
         {
-            var item = await _orderItemRepository.GetByIdAsync(id);
-            if (item == null) return false;
+            var orderItem = await _orderItemRepository.GetByIdAsync(id);
+            if (orderItem == null)
+                return false;
 
-            _orderItemRepository.Delete(item);
+            var product = await _productRepository.GetByIdAsync(orderItem.ProductId);
+            if (product == null)
+                throw new InvalidOperationException("Ürün bulunamadı, stok iadesi yapılamadı.");
+
+            var order = await _orderRepository.GetByIdAsync(orderItem.OrderId);
+            if (order == null)
+                throw new InvalidOperationException("Sipariş bulunamadı, totals güncellenemedi.");
+
+            // stok iadesi
+            product.StockQuantity += orderItem.Quantity;
+
+            // order totals güncelle
+            order.DecreaseTotals(orderItem.Subtotal, orderItem.Weight, orderItem.Volume);
+
+            _orderItemRepository.Delete(orderItem);
             await _unitOfWork.CommitAsync();
+
             return true;
+        }
+
+        // 📌 ADJUST QUANTITY
+        public Task<OrderItemDto?> AdjustQuantityAsync(int id, int newQuantity)
+        {
+            throw new NotImplementedException();
         }
     }
 }
