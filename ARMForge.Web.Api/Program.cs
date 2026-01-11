@@ -42,6 +42,14 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 builder.Services.AddHttpContextAccessor();
 
+#region Startupta fail-fast JWT yapýlandýrmasý
+
+var jwtSecret = builder.Configuration["Jwt:Secret"];
+if (string.IsNullOrWhiteSpace(jwtSecret))
+{
+    throw new InvalidOperationException("JWT Secret is not configured.");
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -51,17 +59,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Secret"]))
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSecret)
+            )
         };
     });
 
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+#endregion
+
+builder.Services.AddAutoMapper(typeof(CustomerMapping).Assembly);
 builder.Services.AddAuthorization();
 
 // Program.cs'de
-var mappingConfig = new MapperConfiguration(mc => mc.AddProfile(new MappingProfile()));
+var mappingConfig = new MapperConfiguration(mc =>
+{
+    mc.AddMaps(typeof(CustomerMapping).Assembly);
+});
+
 
 IMapper mapper = mappingConfig.CreateMapper();
 builder.Services.AddSingleton(mapper);
