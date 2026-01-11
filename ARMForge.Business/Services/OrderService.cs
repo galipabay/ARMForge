@@ -1,5 +1,6 @@
 ﻿using ARMForge.Business.Interfaces;
 using ARMForge.Kernel.Entities;
+using ARMForge.Kernel.Enums;
 using ARMForge.Kernel.Interfaces.GenericRepository;
 using ARMForge.Kernel.Interfaces.UnitOfWork;
 using ARMForge.Types.DTOs;
@@ -31,16 +32,10 @@ namespace ARMForge.Business.Services
         public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
         {
             var orders = await _orderRepository.GetAllWithIncludesAsync(
+                o => _currentUserService.IsAdmin || o.IsActive,
                 o => o.Customer,
-                o => o.Shipments,
-                o => o.OrderItems
+                o => o.Shipments
             );
-
-            // ✅ CurrentUserService ile filtrele
-            if (!_currentUserService.IsAdmin)
-            {
-                orders = orders.Where(o => o.IsActive).ToList();
-            }
 
             return _mapper.Map<IEnumerable<OrderDto>>(orders);
         }
@@ -60,64 +55,66 @@ namespace ARMForge.Business.Services
 
         public async Task<OrderDto> AddOrderAsync(OrderCreateDto orderDto)
         {
-            // ✅ Customer exists check
-            var customerExists = await _customerRepository.GetByConditionAsync(c => c.Id == orderDto.CustomerId && c.IsActive);
-            if (customerExists == null)
-                throw new InvalidOperationException("Müşteri bulunamadı veya aktif değil.");
+            #region Customer validation
+            var customerExists = await _customerRepository
+                .GetByConditionAsync(c => c.Id == orderDto.CustomerId && c.IsActive) ?? throw new InvalidOperationException("Müşteri bulunamadı veya aktif değil.");
+            #endregion
 
-            // ✅ OrderNumber unique check
-            var orderNumberExists = await _orderRepository.FindAsync(o => o.OrderNumber == orderDto.OrderNumber);
-            if (orderNumberExists.Any())
-                throw new InvalidOperationException("Bu sipariş numarası zaten mevcut.");
+            #region OrderNumber unique check
+            if (!string.IsNullOrEmpty(orderDto.OrderNumber))
+            {
+                var orderNumberExists = await _orderRepository
+                    .FindAsync(o => o.OrderNumber == orderDto.OrderNumber);
 
-            // ✅ Delivery Validation (SADECE BUNLAR)
+                if (orderNumberExists.Any())
+                    throw new InvalidOperationException("Bu sipariş numarası zaten mevcut.");
+            }
+            #endregion
+
+            #region Required
             if (string.IsNullOrEmpty(orderDto.DeliveryAddress))
                 throw new InvalidOperationException("Teslimat adresi zorunludur.");
 
             if (string.IsNullOrEmpty(orderDto.DeliveryCity))
                 throw new InvalidOperationException("Teslimat şehri zorunludur.");
+            #endregion
 
+            // 🔹 MAP
             var order = _mapper.Map<Order>(orderDto);
 
-            // ✅ ORDER ITEMS İŞLEME
-            if (orderDto.OrderItems != null && orderDto.OrderItems.Any())
-            {
-                foreach (var itemDto in orderDto.OrderItems)
-                {
-                    // Product exists check
-                    var productExists = await _productRepository.GetByConditionAsync(p => p.Id == itemDto.ProductId && p.IsActive);
-                    if (productExists == null)
-                        throw new InvalidOperationException($"Product ID {itemDto.ProductId} bulunamadı veya aktif değil.");
+            // 🔹 DOMAIN KURALLARI (ÖNEMLİ)
+            order.SetRequiredDate(orderDto.RequiredDate);
+            order.ChangePriority(orderDto.Priority);
 
-                    // Stock check (eğer satış yapıyorsan)
-                    if (productExists.StockQuantity < itemDto.Quantity)
-                        throw new InvalidOperationException($"{productExists.Name} ürününden yeterli stok yok. Mevcut: {productExists.StockQuantity}, İstenen: {itemDto.Quantity}");
-                }
+            if (orderDto.OrderItems != null && orderDto.OrderItems.Count != 0)
+            {
+                var productIds = orderDto.OrderItems.Select(x => x.ProductId).ToList();
+
+                var products = await _productRepository
+                    .FindAsync(p => productIds.Contains(p.Id) && p.IsActive);
+
+                if (products.Count() != productIds.Count)
+                    throw new InvalidOperationException("Bazı ürünler bulunamadı veya aktif değil.");
 
                 decimal totalAmount = 0;
                 decimal totalWeight = 0;
                 decimal totalVolume = 0;
 
-                foreach (var itemDto in orderDto.OrderItems)
+                foreach (var item in orderDto.OrderItems)
                 {
-                    var product = await _productRepository.GetByConditionAsync(
-                        p => p.Id == itemDto.ProductId && p.IsActive
-                    );
+                    var product = products.First(p => p.Id == item.ProductId);
 
-                    if (product == null)
-                        throw new InvalidOperationException($"Product ID {itemDto.ProductId} bulunamadı.");
+                    if (product.StockQuantity < item.Quantity)
+                        throw new InvalidOperationException(
+                            $"{product.Name} için yeterli stok yok. Mevcut: {product.StockQuantity}");
 
-                    if (product.StockQuantity < itemDto.Quantity)
-                        throw new InvalidOperationException($"{product.Name} için yeterli stok yok.");
-
-                    totalAmount += itemDto.Quantity * product.UnitPrice;
-                    totalWeight += itemDto.Weight;
-                    totalVolume += itemDto.Volume;
+                    totalAmount += product.UnitPrice * item.Quantity;
+                    totalWeight += product.UnitWeight * item.Quantity;
+                    totalVolume += product.UnitVolume * item.Quantity;
                 }
 
-                order.TotalAmount = totalAmount;
-                order.TotalWeight = totalWeight;
-                order.TotalVolume = totalVolume;
+                // 🔹 TOTALS SADECE ENTITY ÜZERİNDEN
+                order.SetTotals(totalAmount, totalWeight, totalVolume);
             }
 
             await _orderRepository.AddAsync(order);
@@ -126,11 +123,9 @@ namespace ARMForge.Business.Services
             return _mapper.Map<OrderDto>(order);
         }
 
-        public async Task<OrderDto?> UpdateOrderAsync(int id, OrderUpdateDto orderDto)
+        public async Task<OrderDto> UpdateOrderAsync(int id, OrderUpdateDto orderDto)
         {
-            var order = await _orderRepository.GetByConditionAsync(o => o.Id == id);
-            if (order == null)
-                return null;
+            var order = await _orderRepository.GetByConditionAsync(o => o.Id == id) ?? throw new KeyNotFoundException("Order bulunamadı.");
 
             // ✅ OrderNumber unique check (eğer değiştiyse)
             if (!string.IsNullOrEmpty(orderDto.OrderNumber) && orderDto.OrderNumber != order.OrderNumber)
@@ -143,9 +138,7 @@ namespace ARMForge.Business.Services
             // ✅ Customer exists check (eğer değiştiyse)
             if (orderDto.CustomerId.HasValue)
             {
-                var customerExists = await _customerRepository.GetByConditionAsync(c => c.Id == orderDto.CustomerId.Value && c.IsActive);
-                if (customerExists == null)
-                    throw new InvalidOperationException("Müşteri bulunamadı veya aktif değil.");
+                var customerExists = await _customerRepository.GetByConditionAsync(c => c.Id == orderDto.CustomerId.Value && c.IsActive) ?? throw new InvalidOperationException("Müşteri bulunamadı veya aktif değil.");
             }
 
             if (!string.IsNullOrEmpty(orderDto.DeliveryAddress) && orderDto.DeliveryAddress.Length > 500)
@@ -154,6 +147,33 @@ namespace ARMForge.Business.Services
             _mapper.Map(orderDto, order);
             order.UpdatedAt = DateTime.UtcNow;
 
+            if (orderDto.Status.HasValue)
+            {
+                switch (orderDto.Status.Value)
+                {
+                    case OrderStatus.Confirmed:
+                        order.MarkAsPaid(orderDto.PaymentMethod ?? "Unknown");
+                        break;
+
+                    case OrderStatus.Shipped:
+                        order.Ship();
+                        break;
+
+                    case OrderStatus.Cancelled:
+                        order.Cancel();
+                        break;
+
+                    default:
+                        throw new InvalidOperationException("Geçersiz status geçişi.");
+                }
+            }
+
+            if (orderDto.Priority.HasValue)
+            {
+                order.ChangePriority(orderDto.Priority.Value);
+            }
+
+
             _orderRepository.Update(order);
             await _unitOfWork.CommitAsync();
             return _mapper.Map<OrderDto>(order);
@@ -161,16 +181,78 @@ namespace ARMForge.Business.Services
 
         public async Task<bool> DeleteOrderAsync(int id)
         {
-            var order = await _orderRepository.GetByConditionAsync(o => o.Id == id && o.IsActive);
+            var order = await _orderRepository
+                .GetByConditionAsync(o => o.Id == id && o.IsActive);
+
             if (order == null)
                 return false;
 
-            order.IsActive = false;
+            order.Deactivate();
             order.UpdatedAt = DateTime.UtcNow;
 
             _orderRepository.Update(order);
             await _unitOfWork.CommitAsync();
             return true;
+        }
+
+        public async Task ConfirmOrderAsync(int id, string paymentMethod)
+        {
+            var order = await _orderRepository
+                .GetByConditionAsync(o => o.Id == id && o.IsActive)
+                ?? throw new InvalidOperationException("Sipariş bulunamadı.");
+
+            // ✔ ödeme + draft → confirmed
+            order.MarkAsPaid(paymentMethod);
+
+            order.UpdatedAt = DateTime.UtcNow;
+
+            _orderRepository.Update(order);
+            await _unitOfWork.CommitAsync();
+        }
+
+        public async Task CancelOrderAsync(int id)
+        {
+            var order = await _orderRepository
+                .GetByConditionAsync(o => o.Id == id && o.IsActive)
+                ?? throw new InvalidOperationException("Sipariş bulunamadı.");
+
+            // ✔ entity içi kural
+            order.Cancel();
+
+            order.UpdatedAt = DateTime.UtcNow;
+
+            _orderRepository.Update(order);
+            await _unitOfWork.CommitAsync();
+        }
+
+        public async Task ShipOrderAsync(int id)
+        {
+            var order = await _orderRepository
+                .GetByConditionAsync(o => o.Id == id && o.IsActive)
+                ?? throw new InvalidOperationException("Sipariş bulunamadı.");
+
+            // ✔ ödeme + confirmed kontrolü entity’de
+            order.Ship();
+
+            order.UpdatedAt = DateTime.UtcNow;
+
+            _orderRepository.Update(order);
+            await _unitOfWork.CommitAsync();
+        }
+
+        public async Task MarkOrderAsPaidAsync(int id, string paymentMethod)
+        {
+            var order = await _orderRepository
+                .GetByConditionAsync(o => o.Id == id && o.IsActive)
+                ?? throw new InvalidOperationException("Sipariş bulunamadı.");
+
+            // ✔ status / paymentStatus entity yönetiyor
+            order.MarkAsPaid(paymentMethod);
+
+            order.UpdatedAt = DateTime.UtcNow;
+
+            _orderRepository.Update(order);
+            await _unitOfWork.CommitAsync();
         }
     }
 }
