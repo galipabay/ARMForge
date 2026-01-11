@@ -15,24 +15,17 @@ using System.Threading.Tasks;
 
 namespace ARMForge.Business.Services
 {
-    public class AuthService : IAuthService
+    public class AuthService(
+        IGenericRepository<User> userRepository,
+        IGenericRepository<Role> roleRepository,
+        IGenericRepository<UserRole> userRoleRepository,
+        IConfiguration configuration) : IAuthService
     {
-        private readonly IGenericRepository<User> _userRepository;
-        private readonly IGenericRepository<Role> _roleRepository;
-        private readonly IGenericRepository<UserRole> _userRoleRepository;
-        private readonly IConfiguration _configuration;
+        private readonly IGenericRepository<User> _userRepository = userRepository;
+        private readonly IGenericRepository<Role> _roleRepository = roleRepository;
+        private readonly IGenericRepository<UserRole> _userRoleRepository = userRoleRepository;
+        private readonly IConfiguration _configuration = configuration;
 
-        public AuthService(
-            IGenericRepository<User> userRepository,
-            IGenericRepository<Role> roleRepository,
-            IGenericRepository<UserRole> userRoleRepository,
-            IConfiguration configuration)
-        {
-            _userRepository = userRepository;
-            _roleRepository = roleRepository;
-            _userRoleRepository = userRoleRepository;
-            _configuration = configuration;
-        }
         public async Task<User> RegisterAsync(RegisterRequestDto requestDto)
         {
             var existingUser = await _userRepository.GetByConditionAsync(u => u.Email == requestDto.Email);
@@ -65,43 +58,60 @@ namespace ARMForge.Business.Services
 
             return user;
         }
+
         public async Task<string?> LoginAsync(LoginRequestDto requestDto)
         {
             var user = await _userRepository.GetByConditionAsync(u => u.Email == requestDto.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(requestDto.Password, user.PasswordHash))
+                return null;
+
+            var jwtSecret = _configuration["Jwt:Secret"];
+            var issuer = _configuration["Jwt:Issuer"];
+            var audience = _configuration["Jwt:Audience"];
+
+            if (string.IsNullOrWhiteSpace(jwtSecret))
+                throw new InvalidOperationException("JWT Secret configuration is missing.");
+
+            if (string.IsNullOrWhiteSpace(issuer) || string.IsNullOrWhiteSpace(audience))
+                throw new InvalidOperationException("JWT Issuer/Audience configuration is missing.");
+
+            var key = Encoding.ASCII.GetBytes(jwtSecret);
+
+            var roles = await _userRoleRepository.FindAsync(
+                ur => ur.UserId == user.Id,
+                q => q.Include(x => x.Role)
+            );
+
+            var claims = new List<Claim>
+    {
+        new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new(ClaimTypes.Email, user.Email)
+    };
+
+            foreach (var userRole in roles)
             {
-                return null; // Kimlik doğrulama başarısız
+                if (userRole.Role != null)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Name));
+                }
             }
 
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"]);
-
-            var roles = await _userRoleRepository.GetByConditionAsync(
-                ur => ur.UserId == user.Id,
-                include: q => q.Include(ur => ur.Role));
-
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email)
-            };
-
-            if (roles != null)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, roles.Role.Name));
-            }
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-                Issuer = _configuration["Jwt:Issuer"],
-                Audience = _configuration["Jwt:Audience"]
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature),
+                Issuer = issuer,
+                Audience = audience
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
+
     }
 }
