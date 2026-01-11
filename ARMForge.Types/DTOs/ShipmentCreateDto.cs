@@ -1,5 +1,7 @@
-﻿using System;
+﻿using ARMForge.Kernel.Enums;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,20 +10,28 @@ namespace ARMForge.Types.DTOs
 {
     public class ShipmentCreateDto
     {
-        // Gerekli ID’ler
+        [Required]
         public int OrderId { get; set; }
+
+        [Required]
         public int DriverId { get; set; }
+
+        [Required]
         public int VehicleId { get; set; }
 
-        // Sevkiyat bilgileri
+        [Required]
+        [MaxLength(128)]
         public string Origin { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(128)]
         public string Destination { get; set; } = string.Empty;
 
+        [Required]
         public DateTimeOffset DepartureDate { get; set; }
+
+        [Required]
         public DateTimeOffset EstimatedDeliveryDate { get; set; }
 
-        // Opsiyonel: Sevkiyat durumu ve tracking number
-        public string? Status { get; set; } // "Kargoda" gibi default olarak servis set edebilir
-        public string? TrackingNumber { get; set; } // servis tarafından generate edilecek
     }
 }
