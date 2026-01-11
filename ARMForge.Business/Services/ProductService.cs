@@ -49,10 +49,13 @@ namespace ARMForge.Business.Services
 
         public async Task<ProductDto> AddProductAsync(ProductCreateDto productDto)
         {
-            if (string.IsNullOrEmpty(productDto.StockKeepingUnit))
-            {
-                productDto.StockKeepingUnit = GenerateSku(productDto.Name, productDto.Category);
-            }
+            if (string.IsNullOrWhiteSpace(productDto.Category))
+                throw new InvalidOperationException("Kategori zorunludur.");
+
+            productDto.StockKeepingUnit = GenerateSku(
+                productDto.Name,
+                productDto.Category
+            );
 
             var product = _mapper.Map<Product>(productDto);
             await _productRepository.AddAsync(product);
@@ -101,10 +104,10 @@ namespace ARMForge.Business.Services
             return true;
         }
 
-        private string GenerateSku(string name, string category)
+        private static string GenerateSku(string name, string category)
         {
-            var prefix = category?.Substring(0, 3).ToUpper() ?? "GEN";
-            var namePart = name.Replace(" ", "").Substring(0, 5).ToUpper();
+            var prefix = category?[..3].ToUpper() ?? "GEN";
+            var namePart = name.Replace(" ", "")[..5].ToUpper();
             var random = new Random().Next(1000, 9999);
 
             return $"{prefix}-{namePart}-{random}"; // "ELE-IPHON-3847"
